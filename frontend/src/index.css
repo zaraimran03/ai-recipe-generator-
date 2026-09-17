@@ -1,0 +1,273 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ═══════════════════════════════════════════
+     CSS Custom Property Color System
+     Dark = default | Light = html.light
+     Values in RGB triplets for Tailwind opacity
+  ═══════════════════════════════════════════ */
+  :root {
+    /* Background / Surface */
+    --color-background: 19 19 19;              /* #131313 */
+    --color-surface: 19 19 19;                 /* #131313 */
+    --color-surface-dim: 19 19 19;             /* #131313 */
+    --color-surface-bright: 57 57 57;          /* #393939 */
+    --color-surface-container-lowest: 14 14 14;/* #0e0e0e */
+    --color-surface-container-low: 28 27 27;   /* #1c1b1b */
+    --color-surface-container: 32 32 31;       /* #20201f */
+    --color-surface-container-high: 42 42 42;  /* #2a2a2a */
+    --color-surface-container-highest: 53 53 53;/* #353535 */
+    --color-surface-variant: 53 53 53;         /* #353535 */
+    --color-surface-tint: 255 180 163;         /* #ffb4a3 */
+
+    /* On-Surface */
+    --color-on-background: 229 226 225;        /* #e5e2e1 */
+    --color-on-surface: 229 226 225;           /* #e5e2e1 */
+    --color-on-surface-variant: 222 192 185;   /* #dec0b9 */
+    --color-inverse-surface: 229 226 225;      /* #e5e2e1 */
+    --color-inverse-on-surface: 49 48 48;      /* #313030 */
+
+    /* Primary */
+    --color-primary: 255 180 163;              /* #ffb4a3 */
+    --color-primary-container: 255 126 95;     /* #ff7e5f */
+    --color-on-primary: 98 16 0;               /* #621000 */
+    --color-on-primary-container: 114 23 2;    /* #721702 */
+    --color-primary-fixed: 255 218 210;        /* #ffdad2 */
+    --color-primary-fixed-dim: 255 180 163;    /* #ffb4a3 */
+    --color-on-primary-fixed: 61 7 0;          /* #3d0700 */
+    --color-on-primary-fixed-variant: 132 36 13;/* #84240d */
+    --color-inverse-primary: 165 59 34;        /* #a53b22 */
+
+    /* Secondary */
+    --color-secondary: 255 183 128;            /* #ffb780 */
+    --color-secondary-container: 111 60 13;    /* #6f3c0d */
+    --color-on-secondary: 78 38 0;             /* #4e2600 */
+    --color-on-secondary-container: 241 169 113;/* #f1a971 */
+    --color-secondary-fixed: 255 220 196;      /* #ffdcc4 */
+    --color-secondary-fixed-dim: 255 183 128;  /* #ffb780 */
+    --color-on-secondary-fixed: 47 20 0;       /* #2f1400 */
+    --color-on-secondary-fixed-variant: 108 58 10;/* #6c3a0a */
+
+    /* Tertiary */
+    --color-tertiary: 212 199 143;             /* #d4c78f */
+    --color-tertiary-container: 176 164 111;   /* #b0a46f */
+    --color-on-tertiary: 56 48 6;              /* #383006 */
+    --color-on-tertiary-container: 66 58 15;   /* #423a0f */
+    --color-tertiary-fixed: 241 227 169;       /* #f1e3a9 */
+    --color-tertiary-fixed-dim: 212 199 143;   /* #d4c78f */
+    --color-on-tertiary-fixed: 33 27 0;        /* #211b00 */
+    --color-on-tertiary-fixed-variant: 79 71 27;/* #4f471b */
+
+    /* Error */
+    --color-error: 255 180 171;                /* #ffb4ab */
+    --color-error-container: 147 0 10;         /* #93000a */
+    --color-on-error: 105 0 5;                 /* #690005 */
+    --color-on-error-container: 255 218 214;   /* #ffdad6 */
+
+    /* Outline */
+    --color-outline: 166 139 132;              /* #a68b84 */
+    --color-outline-variant: 87 66 61;         /* #57423d */
+
+    /* Adaptive "text-heading" — replaces text-white for main headings */
+    --color-heading: 255 255 255;              /* white in dark */
+    /* Adaptive overlay border — replaces border-white/x */
+    --color-border-subtle: 255 255 255;        /* white in dark */
+  }
+
+  /* ═══════════════════════
+     LIGHT MODE OVERRIDES
+  ═══════════════════════ */
+  html.light {
+    /* Background / Surface */
+    --color-background: 255 245 225;           /* #FFF5E1 */
+    --color-surface: 255 251 245;              /* #FFFBF5 */
+    --color-surface-dim: 224 211 197;          /* #E0D3C5 */
+    --color-surface-bright: 255 251 245;       /* #FFFBF5 */
+    --color-surface-container-lowest: 255 255 255;/* #FFFFFF */
+    --color-surface-container-low: 255 248 240;/* #FFF8F0 */
+    --color-surface-container: 255 243 232;    /* #FFF3E8 */
+    --color-surface-container-high: 245 232 218;/* #F5E8DA */
+    --color-surface-container-highest: 237 222 207;/* #EDDECF */
+    --color-surface-variant: 245 222 211;      /* #F5DED3 */
+    --color-surface-tint: 165 59 34;           /* #A53B22 */
+
+    /* On-Surface */
+    --color-on-background: 49 48 48;           /* #313030 */
+    --color-on-surface: 28 27 27;              /* #1C1B1B */
+    --color-on-surface-variant: 87 66 61;      /* #57423D */
+    --color-inverse-surface: 49 48 48;         /* #313030 */
+    --color-inverse-on-surface: 245 239 236;   /* #F5EFEC */
+
+    /* Primary */
+    --color-primary: 165 59 34;                /* #A53B22 */
+    --color-primary-container: 255 218 210;    /* #FFDAD2 */
+    --color-on-primary: 255 255 255;           /* #FFFFFF */
+    --color-on-primary-container: 61 7 0;      /* #3D0700 */
+    --color-primary-fixed: 255 218 210;        /* #ffdad2 */
+    --color-primary-fixed-dim: 255 180 163;    /* #ffb4a3 */
+    --color-on-primary-fixed: 61 7 0;          /* #3d0700 */
+    --color-on-primary-fixed-variant: 132 36 13;/* #84240d */
+    --color-inverse-primary: 255 180 163;      /* #FFB4A3 */
+
+    /* Secondary */
+    --color-secondary: 139 79 26;             /* #8B4F1A */
+    --color-secondary-container: 255 220 196;  /* #FFDCC4 */
+    --color-on-secondary: 255 255 255;         /* #FFFFFF */
+    --color-on-secondary-container: 47 20 0;   /* #2F1400 */
+    --color-secondary-fixed: 255 220 196;      /* #ffdcc4 */
+    --color-secondary-fixed-dim: 255 183 128;  /* #ffb780 */
+    --color-on-secondary-fixed: 47 20 0;       /* #2f1400 */
+    --color-on-secondary-fixed-variant: 108 58 10;/* #6c3a0a */
+
+    /* Tertiary */
+    --color-tertiary: 79 71 27;               /* #4F471B */
+    --color-tertiary-container: 241 227 169;   /* #F1E3A9 */
+    --color-on-tertiary: 255 255 255;          /* #FFFFFF */
+    --color-on-tertiary-container: 33 27 0;    /* #211B00 */
+    --color-tertiary-fixed: 241 227 169;       /* #f1e3a9 */
+    --color-tertiary-fixed-dim: 212 199 143;   /* #d4c78f */
+    --color-on-tertiary-fixed: 33 27 0;        /* #211b00 */
+    --color-on-tertiary-fixed-variant: 79 71 27;/* #4f471b */
+
+    /* Error */
+    --color-error: 186 26 26;                 /* #BA1A1A */
+    --color-error-container: 255 218 214;      /* #FFDAD6 */
+    --color-on-error: 255 255 255;             /* #FFFFFF */
+    --color-on-error-container: 65 0 2;        /* #410002 */
+
+    /* Outline */
+    --color-outline: 143 117 112;              /* #8F7570 */
+    --color-outline-variant: 222 192 185;      /* #DEC0B9 */
+
+    /* Adaptive headings — dark in light mode */
+    --color-heading: 28 27 27;                 /* #1C1B1B */
+    /* Adaptive overlay border — dark in light mode */
+    --color-border-subtle: 0 0 0;              /* black */
+  }
+
+  body {
+    background-color: rgb(var(--color-background));
+    color: rgb(var(--color-on-background));
+    overflow-x: hidden;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+/* ═══════════════════
+   GLASS CARD
+═══════════════════ */
+.glass-card {
+  background: rgb(var(--color-surface-container-low) / 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgb(var(--color-border-subtle) / 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.light .glass-card {
+  background: rgb(var(--color-surface-container-low) / 0.65);
+  border: 1px solid rgb(var(--color-border-subtle) / 0.08);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 126, 95, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(255, 126, 95, 0.05);
+}
+
+/* ═══════════════════
+   GRADIENT BUTTON
+═══════════════════ */
+.gradient-btn {
+  background: linear-gradient(135deg, #FF7E5F 0%, #FEB47B 100%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gradient-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 24px rgba(255, 126, 95, 0.3);
+}
+
+/* ═══════════════════
+   SPARKLE EFFECTS
+═══════════════════ */
+.sparkle-ai {
+  position: absolute;
+  pointer-events: none;
+  animation: sparkle-float 4s ease-in-out infinite;
+}
+
+@keyframes sparkle-float {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  50% { transform: translate(10px, -15px) scale(1.2); opacity: 1; }
+}
+
+.floating-icon {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+/* ═══════════════════
+   BENTO GRID
+═══════════════════ */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+}
+
+/* ═══════════════════
+   MATERIAL ICONS
+═══════════════════ */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ═══════════════════
+   SHIMMER SKELETON
+═══════════════════ */
+.shimmer-bg {
+  background: linear-gradient(90deg,
+    rgb(var(--color-surface-container-low)) 25%,
+    rgb(var(--color-surface-container-high)) 50%,
+    rgb(var(--color-surface-container-low)) 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════
+   LIGHT MODE TWEAKS
+═══════════════════ */
+html.light select option {
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
+}
+
+html.light input[type="checkbox"] {
+  accent-color: rgb(var(--color-primary));
+}
+
+/* ═══════════════════════════════════════════
+   Hide native number-input spinner arrows
+   (custom steppers used instead in UI)
+═══════════════════════════════════════════ */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
