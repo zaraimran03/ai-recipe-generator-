@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
 import { useToast, Toast } from '../components/ui/Toast';
@@ -10,7 +9,6 @@ const PREFERENCE_OPTIONS = ['Mediterranean', 'Asian', 'Italian', 'Mexican', 'Veg
 
 export const Settings = () => {
   const { user, updateProfile, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('Profile');
   const { toasts, addToast, removeToast } = useToast();
@@ -55,7 +53,7 @@ export const Settings = () => {
     }
   };
 
-  const tabs = ['Profile', 'Preferences', 'Notifications', 'Appearance'];
+  const tabs = ['Profile', 'Preferences', 'Notifications'];
 
   return (
     <>
@@ -213,21 +211,7 @@ export const Settings = () => {
             </GlassCard>
           )}
 
-          {activeTab === 'Appearance' && (
-            <GlassCard>
-              <h3 className="font-headline-md text-on-surface mb-6">Appearance</h3>
-              <div className="flex items-center justify-between p-4 bg-surface-container rounded-xl">
-                <div>
-                  <h4 className="font-label-md text-on-surface">Theme</h4>
-                  <p className="font-label-sm text-on-surface-variant">Currently: {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</p>
-                </div>
-                <Button type="button" variant="secondary" onClick={toggleTheme}>
-                  <span className="material-symbols-outlined">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
-                  {theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
-                </Button>
-              </div>
-            </GlassCard>
-          )}
+
 
           <div className="flex gap-4 mt-6">
             <Button type="submit" variant="primary" className="flex-1 !py-3.5" disabled={saving}>

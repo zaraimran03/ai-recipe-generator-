@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getPantry, addPantryItem, removePantryItem, clearPantry } from '../services/recipe';
 import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
@@ -67,20 +67,20 @@ export const Pantry = () => {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Ingredient name (e.g. chicken)"
-              className="input flex-1"
+              className="flex-1 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
               required
             />
             <input
               value={quantity}
               onChange={e => setQuantity(e.target.value)}
               placeholder="Qty (e.g. 2)"
-              className="input w-24"
+              className="w-24 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
             />
             <input
               value={unit}
               onChange={e => setUnit(e.target.value)}
               placeholder="Unit (e.g. cups)"
-              className="input w-28"
+              className="w-28 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
             />
             <Button type="submit" variant="primary" disabled={adding}>
               {adding ? 'Adding...' : 'Add'}
