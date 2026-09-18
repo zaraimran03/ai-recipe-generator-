@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getRecipes, getFavorites } from '../services/recipe';
+import { getRecipes, getFavorites, getRecommendations } from '../services/recipe';
 import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
 import SkeletonLoader from '../components/ui/SkeletonLoader';
@@ -20,7 +20,7 @@ export const Dashboard = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await getRecipes();
+        const data = await getRecommendations();
         setRecipes(data.slice(0, 4));
       } catch (e) { console.error(e); }
       finally { setLoading(false); }

@@ -21,6 +21,8 @@ app.use('/user', require('./routes/user'));
 app.use('/api/recipes', require('./routes/recipes'));
 app.use('/api/favorites', require('./routes/favorites'));
 app.use('/api/history', require('./routes/history'));
+app.use('/api/pantry', require('./routes/pantry'));
+app.use('/api/family-recipes', require('./routes/familyRecipes'));
 app.use('/admin', require('./routes/admin'));
 app.use('/nutrition', require('./routes/nutrition'));
 

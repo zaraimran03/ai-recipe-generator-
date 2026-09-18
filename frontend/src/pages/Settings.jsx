@@ -23,7 +23,13 @@ export const Settings = () => {
         name: user.name || '',
         email: user.email || '',
         diet_preference: user.diet_preference || 'None',
-        allergies: user.allergies || '',
+        allergies: user.allergies?.join(', ') || '',
+        generation: user.generation || '',
+        spiceLevel: user.spiceLevel || '',
+        cookingSkill: user.cookingSkill || '',
+        budgetPreference: user.budgetPreference || '',
+        favoriteCuisines: user.favoriteCuisines?.join(', ') || '',
+        dislikedIngredients: user.dislikedIngredients?.join(', ') || '',
         notificationsEnabled: user.notificationsEnabled ?? true,
       });
     }
@@ -32,7 +38,15 @@ export const Settings = () => {
   const onSave = async (data) => {
     try {
       setSaving(true);
-      await updateProfile(data);
+      // transform comma separated strings to arrays
+      const payload = {
+        ...data,
+        allergies: data.allergies ? data.allergies.split(',').map(s => s.trim()) : [],
+        favoriteCuisines: data.favoriteCuisines ? data.favoriteCuisines.split(',').map(s => s.trim()) : [],
+        dislikedIngredients: data.dislikedIngredients ? data.dislikedIngredients.split(',').map(s => s.trim()) : [],
+        generation: data.generation === '' ? null : data.generation,
+      };
+      await updateProfile(payload);
       addToast('Profile updated successfully!', 'success');
     } catch (e) {
       addToast('Failed to save settings', 'error');
@@ -106,12 +120,79 @@ export const Settings = () => {
           {activeTab === 'Preferences' && (
             <GlassCard>
               <h3 className="font-headline-md text-on-surface mb-6">Cooking Preferences</h3>
-              <div className="space-y-2">
-                <label className="font-label-md text-on-surface-variant">Preferred Cuisine Style</label>
-                <select {...register('diet_preference')}
-                  className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 text-on-surface">
-                  {PREFERENCE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
+              
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <label className="font-label-md text-on-surface-variant">Dietary Preference</label>
+                  <select {...register('diet_preference')}
+                    className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 text-on-surface">
+                    {PREFERENCE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="font-label-md text-on-surface-variant">Generation</label>
+                  <select {...register('generation')}
+                    className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 text-on-surface">
+                    <option value="">Prefer not to specify</option>
+                    <option value="GEN_Z">Gen Z</option>
+                    <option value="MILLENNIAL">Millennial</option>
+                    <option value="GEN_X">Gen X</option>
+                    <option value="OLDER_ADULT">50+ / Older Adult</option>
+                  </select>
+                  <p className="text-xs text-on-surface-variant">We'll use this as one of several personalization signals. Your dietary and cooking preferences always take priority.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="font-label-md text-on-surface-variant">Cooking Skill</label>
+                  <select {...register('cookingSkill')}
+                    className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 text-on-surface">
+                    <option value="">Any</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Expert">Expert</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="font-label-md text-on-surface-variant">Spice Level</label>
+                  <select {...register('spiceLevel')}
+                    className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 text-on-surface">
+                    <option value="">Any</option>
+                    <option value="Mild">Mild</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Spicy">Spicy</option>
+                    <option value="Extra Spicy">Extra Spicy</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="font-label-md text-on-surface-variant">Max Budget (Rs) per meal</label>
+                  <div className="relative group">
+                    <input {...register('budgetPreference', { valueAsNumber: true })} type="number" placeholder="E.g. 1000"
+                      className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline"/>
+                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">payments</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="font-label-md text-on-surface-variant">Favorite Cuisines (comma separated)</label>
+                  <div className="relative group">
+                    <input {...register('favoriteCuisines')} type="text" placeholder="Pakistani, Italian, Chinese"
+                      className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline"/>
+                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">restaurant</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="font-label-md text-on-surface-variant">Disliked Ingredients (comma separated)</label>
+                  <div className="relative group">
+                    <input {...register('dislikedIngredients')} type="text" placeholder="Mushrooms, Olives"
+                      className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline"/>
+                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">block</span>
+                  </div>
+                </div>
+
               </div>
             </GlassCard>
           )}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import ProtectedRoutes from './components/layout/ProtectedRoutes';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/layout/Layout';
 
@@ -16,6 +17,8 @@ import SavedRecipes from './pages/SavedRecipes';
 import Settings from './pages/Settings';
 import NutritionAnalytics from './pages/NutritionAnalytics';
 import AdminPanel from './pages/AdminPanel';
+import Pantry from './pages/Pantry';
+import FamilyRecipes from './pages/FamilyRecipes';
 
 function App() {
   return (
@@ -28,30 +31,19 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
 
           {/* Authenticated Routes with Layout */}
-          <Route element={<Layout requireAuth={true} />}>
-            <Route path="/dashboard" element={
-              <ProtectedRoute><Dashboard /></ProtectedRoute>
-            } />
-            <Route path="/generate" element={
-              <ProtectedRoute><GenerateRecipe /></ProtectedRoute>
-            } />
-            <Route path="/recipe/:id" element={
-              <ProtectedRoute><RecipeDetails /></ProtectedRoute>
-            } />
-            <Route path="/saved" element={
-              <ProtectedRoute><SavedRecipes /></ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute><Settings /></ProtectedRoute>
-            } />
-            <Route path="/nutrition" element={
-              <ProtectedRoute><NutritionAnalytics /></ProtectedRoute>
-            } />
-            
+          <Route element={<Layout requireAuth={true} />}> 
+            <Route element={<ProtectedRoutes />}> 
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/generate" element={<GenerateRecipe />} />
+              <Route path="/recipe/:id" element={<RecipeDetails />} />
+              <Route path="/saved" element={<SavedRecipes />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/nutrition" element={<NutritionAnalytics />} />
+              <Route path="/pantry" element={<Pantry />} />
+              <Route path="/family-recipes" element={<FamilyRecipes />} />
+            </Route>
             {/* Admin Only Route */}
-            <Route path="/admin" element={
-              <ProtectedRoute adminOnly={true}><AdminPanel /></ProtectedRoute>
-            } />
+            <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminPanel /></ProtectedRoute>} />
           </Route>
         </Routes>
       </AuthProvider>

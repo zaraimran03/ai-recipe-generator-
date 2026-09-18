@@ -7,11 +7,13 @@ export const Sidebar = () => {
   const navigate = useNavigate();
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
-    { name: 'Generator', path: '/generate', icon: 'auto_awesome' },
-    { name: 'Saved Recipes', path: '/saved', icon: 'bookmark' },
-    { name: 'Nutrition', path: '/nutrition', icon: 'analytics' },
-    { name: 'Settings', path: '/settings', icon: 'settings' },
+    { name: 'Dashboard',    path: '/dashboard', icon: 'dashboard' },
+    { name: 'Generator',    path: '/generate',  icon: 'auto_awesome' },
+    { name: 'Saved Recipes',path: '/saved',     icon: 'bookmark' },
+    { name: 'Family Recipes',path: '/family-recipes', icon: 'menu_book' },
+    { name: 'My Pantry',    path: '/pantry',    icon: 'kitchen' },
+    { name: 'Nutrition',    path: '/nutrition', icon: 'analytics' },
+    { name: 'Settings',     path: '/settings',  icon: 'settings' },
   ];
 
   if (user?.is_admin || user?.is_staff) {
