@@ -1,9 +1,10 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const pantryItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   quantity: { type: String, default: '' },
   unit: { type: String, default: '' },
+  expiryDate: { type: Date, default: null },
 }, { _id: true });
 
 const pantrySchema = new mongoose.Schema({

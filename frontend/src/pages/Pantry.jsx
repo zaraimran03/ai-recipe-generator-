@@ -10,8 +10,15 @@ export const Pantry = () => {
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
   const [adding, setAdding] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
+
+  const getDaysUntilExpiry = (dateString) => {
+    if (!dateString) return null;
+    const diffTime = new Date(dateString) - new Date();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
 
   const load = async () => {
     try { setItems(await getPantry()); }
@@ -26,9 +33,9 @@ export const Pantry = () => {
     if (!name.trim()) return;
     setAdding(true);
     try {
-      const updated = await addPantryItem(name.trim(), quantity.trim(), unit.trim());
+      const updated = await addPantryItem(name.trim(), quantity.trim(), unit.trim(), expiryDate || null);
       setItems(updated);
-      setName(''); setQuantity(''); setUnit('');
+      setName(''); setQuantity(''); setUnit(''); setExpiryDate('');
       addToast('Item added to pantry!', 'success');
     } catch { addToast('Failed to add item', 'error'); }
     finally { setAdding(false); }
@@ -62,28 +69,34 @@ export const Pantry = () => {
         {/* Add item form */}
         <GlassCard>
           <h2 className="font-headline-md text-on-surface mb-4">Add Item</h2>
-          <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 items-start">
             <input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Ingredient name (e.g. chicken)"
-              className="flex-1 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
+              className="w-full md:col-span-4 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
               required
             />
             <input
               value={quantity}
               onChange={e => setQuantity(e.target.value)}
               placeholder="Qty (e.g. 2)"
-              className="w-24 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
+              className="w-full md:col-span-2 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
             />
             <input
               value={unit}
               onChange={e => setUnit(e.target.value)}
               placeholder="Unit (e.g. cups)"
-              className="w-28 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
+              className="w-full md:col-span-2 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
             />
-            <Button type="submit" variant="primary" disabled={adding}>
-              {adding ? 'Adding...' : 'Add'}
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={e => setExpiryDate(e.target.value)}
+              className="w-full md:col-span-3 bg-surface-container-highest/30 border border-outline-variant/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-outline text-on-surface"
+            />
+            <Button type="submit" variant="primary" disabled={adding} className="w-full md:col-span-1 h-full min-h-[48px]">
+              {adding ? '...' : 'Add'}
             </Button>
           </form>
         </GlassCard>
@@ -116,9 +129,19 @@ export const Pantry = () => {
                     <span className="material-symbols-outlined text-primary text-lg">kitchen</span>
                     <div>
                       <p className="font-label-md text-on-surface">{item.name}</p>
-                      {(item.quantity || item.unit) && (
-                        <p className="text-label-sm text-on-surface-variant">{item.quantity} {item.unit}</p>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {(item.quantity || item.unit) && (
+                          <p className="text-label-sm text-on-surface-variant">{item.quantity} {item.unit}</p>
+                        )}
+                        {item.expiryDate && (
+                          <p className={`text-label-sm font-medium ${
+                            getDaysUntilExpiry(item.expiryDate) < 0 ? 'text-error' :
+                            getDaysUntilExpiry(item.expiryDate) <= 3 ? 'text-[#ff9800]' : 'text-primary'
+                          }`}>
+                            Exp: {new Date(item.expiryDate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <button

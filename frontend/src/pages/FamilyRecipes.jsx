@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getFamilyRecipes, createFamilyRecipe, modernizeFamilyRecipe } from '../services/familyRecipe';
 import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
+import VoiceInputButton from '../components/ui/VoiceInputButton';
 import { useToast, Toast } from '../components/ui/Toast';
 
 export const FamilyRecipes = () => {
@@ -89,9 +90,20 @@ export const FamilyRecipes = () => {
             />
 
             <div className="flex items-center justify-between">
-              <span className="text-label-sm text-on-surface-variant">
-                {newRecipeText.length > 0 && `${newRecipeText.length} characters`}
-              </span>
+              <div className="flex items-center gap-4">
+                <VoiceInputButton 
+                  size="md"
+                  onTranscript={(text, isFinal) => {
+                    if (isFinal) {
+                      setNewRecipeText(prev => prev + (prev.trim() ? ' ' : '') + text.trim());
+                      addToast('Voice input added!', 'success');
+                    }
+                  }}
+                />
+                <span className="text-label-sm text-on-surface-variant">
+                  {newRecipeText.length > 0 && `${newRecipeText.length} characters`}
+                </span>
+              </div>
               <Button variant="primary" onClick={handlePreserve} disabled={preserving || !newRecipeText.trim()}>
                 {preserving ? (
                   <>

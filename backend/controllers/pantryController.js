@@ -1,4 +1,4 @@
-﻿const Pantry = require('../models/Pantry');
+const Pantry = require('../models/Pantry');
 
 // GET /api/pantry/ — get user's pantry
 exports.get = async (req, res) => {
@@ -13,12 +13,12 @@ exports.get = async (req, res) => {
 // POST /api/pantry/ — add item
 exports.add = async (req, res) => {
   try {
-    const { name, quantity, unit } = req.body;
+    const { name, quantity, unit, expiryDate } = req.body;
     if (!name) return res.status(400).json({ message: 'Item name is required' });
 
     const pantry = await Pantry.findOneAndUpdate(
       { user: req.user.id },
-      { $push: { items: { name, quantity: quantity || '', unit: unit || '' } } },
+      { $push: { items: { name, quantity: quantity || '', unit: unit || '', expiryDate: expiryDate || null } } },
       { new: true, upsert: true }
     );
     res.status(201).json(pantry.items);

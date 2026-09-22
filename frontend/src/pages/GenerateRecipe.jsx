@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { generateRecipe } from '../services/recipe';
+import { generateRecipe, getPantry } from '../services/recipe';
 import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
+import VoiceInputButton from '../components/ui/VoiceInputButton';
 
 // Custom stepper control — no native spinner arrows
 const Stepper = ({ label, unit, value, min, max, step, onChange }) => (
@@ -34,13 +35,24 @@ const Stepper = ({ label, unit, value, min, max, step, onChange }) => (
 );
 
 const dietaryOptions = ['Vegan', 'Vegetarian', 'Gluten-Free', 'Keto', 'Paleo', 'Low Carb', 'High Protein', 'Dairy-Free'];
+const cuisineOptions = ['Any', 'Desi / South Asian', 'Italian', 'Mexican', 'Mediterranean', 'East Asian', 'Middle Eastern'];
 
 export const GenerateRecipe = () => {
   const navigate = useNavigate();
   const [ingredients, setIngredients] = useState([]);
   const [ingredientInput, setIngredientInput] = useState('');
   const [selectedDiet, setSelectedDiet] = useState([]);
+  const [selectedCuisine, setSelectedCuisine] = useState('Any');
   const [generating, setGenerating] = useState(false);
+  
+  // Pantry Selection State
+  const [pantryItems, setPantryItems] = useState([]);
+  const [selectedPantry, setSelectedPantry] = useState([]);
+  const [strictPantryMode, setStrictPantryMode] = useState(false);
+
+  React.useEffect(() => {
+    getPantry().then(setPantryItems).catch(console.error);
+  }, []);
 
   // Stepper state — managed independently from react-hook-form
   const [maxTime, setMaxTime] = useState(30);
@@ -56,6 +68,7 @@ export const GenerateRecipe = () => {
 
   const removeIngredient = (item) => setIngredients(prev => prev.filter(i => i !== item));
   const toggleDiet = (d) => setSelectedDiet(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+  const togglePantryItem = (id) => setSelectedPantry(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const onSubmit = async () => {
     setGenerating(true);
@@ -63,10 +76,13 @@ export const GenerateRecipe = () => {
       const recipe = await generateRecipe({
         ingredients: ingredients.join(', '),
         preferences: selectedDiet,
+        cuisine: selectedCuisine,
         maxTime,
         calories,
         servings,
         cooking_time: maxTime,
+        strictPantryMode,
+        pantryIngredients: pantryItems.filter(i => selectedPantry.includes(i._id)),
       });
       navigate(`/recipe/${recipe.id}`, { state: { fromGenerate: true } });
     } catch (e) {
@@ -121,14 +137,22 @@ export const GenerateRecipe = () => {
         <GlassCard>
           <h3 className="font-headline-md text-on-surface mb-4">Ingredients</h3>
           <div className="flex gap-2 mb-4">
-            <input
-              value={ingredientInput}
-              onChange={e => setIngredientInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addIngredient())}
-              placeholder="e.g. chicken, spinach, garlic..."
-              className="flex-1 bg-surface-container rounded-xl px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 outline-none focus:ring-2 focus:ring-primary/30 border border-outline-variant/20"
-            />
-            <Button type="button" variant="primary" onClick={addIngredient} className="!px-5">
+            <div className="flex-1 flex items-center bg-surface-container rounded-xl border border-outline-variant/20 focus-within:ring-2 focus-within:ring-primary/30 transition-all pr-2">
+              <input
+                value={ingredientInput}
+                onChange={e => setIngredientInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addIngredient())}
+                placeholder="e.g. chicken, spinach, garlic..."
+                className="flex-1 bg-transparent px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 outline-none"
+              />
+              <VoiceInputButton 
+                size="md"
+                onTranscript={(text, isFinal) => {
+                  setIngredientInput(text);
+                }} 
+              />
+            </div>
+            <Button type="button" variant="primary" onClick={addIngredient} className="!px-5 shrink-0">
               <span className="material-symbols-outlined">add</span>
             </Button>
           </div>
@@ -142,9 +166,66 @@ export const GenerateRecipe = () => {
               ))}
             </div>
           )}
+
+          {pantryItems.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-outline-variant/10">
+              <h4 className="font-label-md text-on-surface mb-3">Select from My Pantry</h4>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {pantryItems.map(item => (
+                  <button
+                    key={item._id}
+                    type="button"
+                    onClick={() => togglePantryItem(item._id)}
+                    className={`px-3 py-1.5 rounded-full text-label-sm border transition-all flex items-center gap-1.5 ${
+                      selectedPantry.includes(item._id)
+                        ? 'bg-secondary/20 border-secondary text-secondary shadow-[0_0_8px_rgba(255,200,160,0.2)]'
+                        : 'border-outline-variant/30 text-on-surface-variant hover:border-secondary/40 hover:text-secondary'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[14px]">{selectedPantry.includes(item._id) ? 'check' : 'add'}</span>
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+              <div className={`mt-2 flex items-center justify-between rounded-xl p-4 border transition-colors ${strictPantryMode ? 'bg-primary/5 border-primary/30' : 'bg-surface-container-high/50 border-outline-variant/10'}`}>
+                <div className="flex gap-3 items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${strictPantryMode ? 'bg-primary/20 text-primary' : 'bg-surface-container-highest text-on-surface-variant'}`}>
+                    <span className="material-symbols-outlined text-[18px]">verified_user</span>
+                  </div>
+                  <div>
+                    <h5 className={`font-label-md transition-colors ${strictPantryMode ? 'text-primary font-bold' : 'text-on-surface'}`}>Use ONLY Selected Pantry Items</h5>
+                    <p className="text-xs text-on-surface-variant mt-0.5">Strictly restricts AI to selected pantry items (ignores others)</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStrictPantryMode(!strictPantryMode)}
+                  className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 shrink-0 shadow-inner ${strictPantryMode ? 'bg-primary shadow-[0_0_10px_rgba(255,180,163,0.3)]' : 'bg-surface-container-highest'}`}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform shadow-md ${strictPantryMode ? 'translate-x-6' : 'translate-x-0'}`} />
+                </button>
+              </div>
+            </div>
+          )}
         </GlassCard>
 
-        {/* Dietary Preferences */}
+        {/* Cuisine Preferences */}
+        <GlassCard>
+          <h3 className="font-headline-md text-on-surface mb-4">Cuisine Type</h3>
+          <div className="flex flex-wrap gap-2">
+            {cuisineOptions.map(c => (
+              <button
+                key={c} type="button"
+                onClick={() => setSelectedCuisine(c)}
+                className={`px-4 py-2 rounded-full text-label-sm border transition-all ${
+                  selectedCuisine === c
+                    ? 'bg-primary/20 border-primary text-primary shadow-[0_0_12px_rgba(255,180,163,0.2)]'
+                    : 'border-outline-variant/30 text-on-surface-variant hover:border-primary/40 hover:text-primary'
+                }`}
+              >{c}</button>
+            ))}
+          </div>
+        </GlassCard>
         <GlassCard>
           <h3 className="font-headline-md text-on-surface mb-4">Dietary Preferences</h3>
           <div className="flex flex-wrap gap-2">

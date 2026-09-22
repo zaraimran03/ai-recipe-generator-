@@ -16,10 +16,41 @@ const hashIngredients = (ingredients) => {
 // POST /api/recipes/generate/
 exports.generate = async (req, res) => {
   try {
-    const { ingredients, cuisine, taste, cooking_time, difficulty, servings, dietary_preference, allergies, calories } = req.body;
+    const { ingredients, cuisine, taste, cooking_time, difficulty, servings, dietary_preference, allergies, calories, usePantry, strictPantryMode, pantryIngredients } = req.body;
+
+    let finalIngredients = ingredients || '';
+    if (strictPantryMode && pantryIngredients && pantryIngredients.length > 0) {
+      const pantryStr = pantryIngredients.map(item => {
+        let str = `${item.name}`;
+        const details = [];
+        if (item.quantity || item.unit) details.push(`${item.quantity} ${item.unit}`.trim());
+        if (item.expiryDate) details.push(`exp: ${new Date(item.expiryDate).toISOString().split('T')[0]}`);
+        if (details.length > 0) str += ` (${details.join(', ')})`;
+        return str;
+      }).join(', ');
+      
+      finalIngredients = finalIngredients ? `${finalIngredients}, ${pantryStr}` : pantryStr;
+    } else if (usePantry && !strictPantryMode) {
+      const PantryModel = require('../models/Pantry');
+      const pantry = await PantryModel.findOne({ user: req.user.id });
+      if (pantry && pantry.items.length > 0) {
+        const pantryStr = pantry.items.map(item => {
+          let str = `${item.name}`;
+          const details = [];
+          if (item.quantity || item.unit) details.push(`${item.quantity} ${item.unit}`.trim());
+          if (item.expiryDate) details.push(`exp: ${new Date(item.expiryDate).toISOString().split('T')[0]}`);
+          if (details.length > 0) str += ` (${details.join(', ')})`;
+          return str;
+        }).join(', ');
+        
+        finalIngredients = finalIngredients 
+          ? `${finalIngredients}, ${pantryStr}`
+          : pantryStr;
+      }
+    }
 
     // Cache check: if an identical ingredient combination exists for this user, return it
-    const hash = hashIngredients(ingredients);
+    const hash = hashIngredients(finalIngredients);
     const cached = await Recipe.findOne({ user: req.user.id, ingredientHash: hash });
     if (cached) {
       console.log('Cache hit for ingredient hash:', hash);
@@ -33,7 +64,7 @@ exports.generate = async (req, res) => {
     
     // Combine explicit request body params with user profile defaults/constraints
     const params = {
-      ingredients: ingredients,
+      ingredients: finalIngredients,
       cuisine: cuisine || user.favoriteCuisines?.join(','),
       taste: taste || user.spiceLevel,
       cooking_time: cooking_time,
@@ -44,7 +75,8 @@ exports.generate = async (req, res) => {
       calories: calories,
       dislikedIngredients: user.dislikedIngredients,
       budgetPreference: user.budgetPreference,
-      generation: user.generation
+      generation: user.generation,
+      strictPantryMode: strictPantryMode || false
     };
 
     // Generate via Groq

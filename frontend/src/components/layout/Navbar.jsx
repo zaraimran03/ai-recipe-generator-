@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getRecipes } from '../../services/recipe';
+import VoiceInputButton from '../ui/VoiceInputButton';
 
 // Build notifications from recent recipe activity
 const buildNotifications = (recipes) => {
@@ -39,6 +40,7 @@ export const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [readIds, setReadIds] = useState(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -84,7 +86,20 @@ export const Navbar = () => {
         </Link>
         <div className="hidden md:flex items-center gap-2 bg-surface-container-high rounded-full px-4 py-1.5 border border-outline-variant/20">
           <span className="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
-          <input className="bg-transparent border-none focus:ring-0 text-label-md text-on-surface placeholder:text-on-surface-variant/50 w-48 md:w-64 outline-none" placeholder="Search recipes..." type="text"/>
+          <input 
+            className="bg-transparent border-none focus:ring-0 text-label-md text-on-surface placeholder:text-on-surface-variant/50 w-40 outline-none" 
+            placeholder="Search recipes..." 
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <VoiceInputButton 
+            size="sm" 
+            onTranscript={(text, isFinal) => {
+              setSearchQuery(text);
+              // If you have a search trigger, you could fire it here when isFinal is true
+            }}
+          />
         </div>
       </div>
       <div className="flex items-center gap-4 md:gap-8">

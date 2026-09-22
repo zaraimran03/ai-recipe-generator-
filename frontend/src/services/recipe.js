@@ -15,6 +15,9 @@ export const generateRecipe = async (formData) => {
       : (formData.preferences || []),
     allergies: formData.allergies || [],
     calories: formData.calories || 500,
+    usePantry: formData.usePantry || false,
+    strictPantryMode: formData.strictPantryMode || false,
+    pantryIngredients: formData.pantryIngredients || [],
   };
   const response = await api.post('/api/recipes/generate/', payload);
   return response.data;
@@ -98,8 +101,8 @@ export const getPantry = async () => {
   return response.data;
 };
 
-export const addPantryItem = async (name, quantity = '', unit = '') => {
-  const response = await api.post('/api/pantry/', { name, quantity, unit });
+export const addPantryItem = async (name, quantity = '', unit = '', expiryDate = null) => {
+  const response = await api.post('/api/pantry/', { name, quantity, unit, expiryDate });
   return response.data;
 };
 
