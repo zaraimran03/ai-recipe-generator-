@@ -49,19 +49,6 @@ exports.generate = async (req, res) => {
       }
     }
 
-    // Cache check: if an identical ingredient combination exists for this user, return it
-    if (req.user) {
-      const hash = hashIngredients(finalIngredients);
-      const cached = await Recipe.findOne({ user: req.user.id, ingredientHash: hash });
-      if (cached) {
-        console.log('Cache hit for ingredient hash:', hash);
-        const obj = cached.toObject();
-        obj.id = obj._id;
-        obj.fromCache = true;
-        return res.status(200).json(obj);
-      }
-    }
-
     const user = req.user ? await User.findById(req.user.id) : {};
     
     // Combine explicit request body params with user profile defaults/constraints
@@ -80,6 +67,21 @@ exports.generate = async (req, res) => {
       generation: user.generation,
       strictPantryMode: strictPantryMode || false
     };
+
+    let hash;
+    // Cache check: if an identical param combination exists for this user, return it
+    if (req.user) {
+      hash = crypto.createHash('md5').update(JSON.stringify(params)).digest('hex');
+      const cached = await Recipe.findOne({ user: req.user.id, ingredientHash: hash });
+      if (cached) {
+        console.log('Cache hit for recipe params hash:', hash);
+        const obj = cached.toObject();
+        obj.id = obj._id;
+        obj.fromCache = true;
+        return res.status(200).json(obj);
+      }
+    }
+
 
     // Generate via Groq
     const generated = await groqService.generateRecipe(params);
@@ -210,11 +212,7 @@ exports.recommendations = async (req, res) => {
     // For now, we'll just fetch a few recipes that match their preferences or generation,
     // or recently generated recipes by other users with similar generation (for demo purposes).
     
-    let query = {};
-    if (user.generation) {
-      // Find recipes generated for same generation, or just any recent recipes
-      query = { user: { $ne: user._id } }; // recipes from others
-    }
+    let query = { user: user._id };
     const recipes = await Recipe.find(query).sort({ createdAt: -1 }).limit(10);
     const results = recipes.map(r => { const o = r.toObject(); o.id = o._id; return o; });
     res.json({ results });

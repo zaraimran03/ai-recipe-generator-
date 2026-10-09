@@ -7,12 +7,12 @@ const crypto = require('crypto');
 const generateTokens = (user) => {
   const access = jwt.sign(
     { id: user._id, email: user.email, role: user.role, is_superuser: user.is_superuser },
-    process.env.JWT_SECRET || 'secret',
+    process.env.JWT_SECRET,
     { expiresIn: '15m' }
   );
   const refresh = jwt.sign(
     { id: user._id },
-    process.env.JWT_REFRESH_SECRET || 'refresh_secret',
+    process.env.JWT_REFRESH_SECRET,
     { expiresIn: '7d' }
   );
   return { access, refresh };
@@ -100,6 +100,12 @@ exports.login = async (req, res) => {
 
     const tokens = generateTokens(user);
 
+    // Save refresh token for revocation and cap at 5 sessions
+    user.refreshTokens = user.refreshTokens || [];
+    user.refreshTokens.push(tokens.refresh);
+    if (user.refreshTokens.length > 5) user.refreshTokens.shift();
+    await user.save();
+
     res.json({
       access: tokens.access,
       refresh: tokens.refresh,
@@ -121,7 +127,7 @@ exports.refresh = async (req, res) => {
       return res.status(400).json({ message: 'Refresh token is required' });
     }
 
-    jwt.verify(refresh, process.env.JWT_REFRESH_SECRET || 'refresh_secret', async (err, decoded) => {
+    jwt.verify(refresh, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
       if (err) {
         return res.status(401).json({ message: 'Invalid refresh token' });
       }
@@ -130,18 +136,34 @@ exports.refresh = async (req, res) => {
       if (!user) {
         return res.status(401).json({ message: 'User not found' });
       }
+      if (!user.refreshTokens.includes(refresh)) {
+        return res.status(401).json({ message: 'Refresh token revoked' });
+      }
 
+      // Token rotation
       const tokens = generateTokens(user);
-      res.json({ access: tokens.access });
+      user.refreshTokens = user.refreshTokens.filter(t => t !== refresh);
+      user.refreshTokens.push(tokens.refresh);
+      await user.save();
+
+      res.json({ access: tokens.access, refresh: tokens.refresh });
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-exports.logout = (req, res) => {
-  // In a real app we might blacklist the refresh token. For now just return success.
-  res.json({ success: true });
+exports.logout = async (req, res) => {
+  try {
+    const { refresh } = req.body;
+    if (refresh) {
+      // Find user with this refresh token and pull it
+      await User.updateOne({ refreshTokens: refresh }, { $pull: { refreshTokens: refresh } });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };
 
 // crypto imported at the top
@@ -213,7 +235,8 @@ exports.verifyResetOTP = async (req, res) => {
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = resetToken;
+    const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordToken = hashedResetToken;
     user.resetPasswordExpires = Date.now() + 15 * 60000;
     // Invalidate OTP immediately so it cannot be re-used
     user.otp = null;
@@ -235,7 +258,8 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 8 characters.' });
     }
 
-    const user = await User.findOne({ resetPasswordToken: resetToken, resetPasswordExpires: { $gt: Date.now() } });
+    const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const user = await User.findOne({ resetPasswordToken: hashedResetToken, resetPasswordExpires: { $gt: Date.now() } });
 
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired reset token.' });

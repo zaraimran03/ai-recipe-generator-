@@ -93,7 +93,26 @@ const callGroq = async (systemPrompt, userContent, schema) => {
 
 exports.generateRecipe = async (params) => {
   try {
-    return await callGroq(SYSTEM_PROMPT, buildUserPrompt(params), RecipeSchema);
+    const recipe = await callGroq(SYSTEM_PROMPT, buildUserPrompt(params), RecipeSchema);
+    
+    // Strict Pantry Mode validation
+    if (params.strictPantryMode && params.ingredients) {
+      const allowedText = Array.isArray(params.ingredients) ? params.ingredients.join(' ').toLowerCase() : params.ingredients.toLowerCase();
+      
+      const invalid = recipe.ingredients.find(i => {
+        if (i.isPantryStaple) return false;
+        // Check if any significant word of the ingredient exists in the allowed text
+        const nameWords = i.name.toLowerCase().split(' ').filter(w => w.length > 3);
+        const hasMatch = nameWords.some(w => allowedText.includes(w)) || allowedText.includes(i.name.toLowerCase());
+        return !hasMatch;
+      });
+      
+      if (invalid) {
+        throw new Error(`Pantry constraint violated: AI included unauthorized ingredient "${invalid.name}"`);
+      }
+    }
+    
+    return recipe;
   } catch (err) {
     if (err?.name === 'ZodError') {
       console.error('Schema validation failed:', JSON.stringify(err.errors, null, 2));

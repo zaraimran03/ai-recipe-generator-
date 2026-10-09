@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getRecipes, getFavorites, deleteFavorite, deleteRecipe } from '../services/recipe';
-import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
 import SkeletonLoader from '../components/ui/SkeletonLoader';
 import { useToast, Toast } from '../components/ui/Toast';

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { sendWelcomeEmail } from '../services/email';
 
 export const SignUp = () => {
   const { register: registerAuth } = useAuth();

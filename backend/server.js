@@ -1,4 +1,15 @@
 require('dotenv').config();
+
+if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET and JWT_REFRESH_SECRET must be defined in the environment.");
+  process.exit(1);
+}
+
+if (!process.env.MONGO_URI) {
+  console.error("FATAL ERROR: MONGO_URI must be defined in the environment.");
+  process.exit(1);
+}
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');

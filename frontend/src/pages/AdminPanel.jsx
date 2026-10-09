@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import { listUsers, deleteUser, listAllRecipes, deleteAnyRecipe, getStats } from '../services/admin';
 import { Navigate, Link } from 'react-router-dom';
 import GlassCard from '../components/ui/GlassCard';
-import Button from '../components/ui/Button';
 import SkeletonLoader from '../components/ui/SkeletonLoader';
 import { useToast, Toast } from '../components/ui/Toast';
 
@@ -115,7 +114,12 @@ export const AdminPanel = () => {
                 </tr>
               </thead>
               <tbody>
-                {users.map((u, i) => (
+                {users.length === 0 ? (
+                  <tr><td colSpan="4" className="px-6 py-16 text-center">
+                    <span className="material-symbols-outlined text-on-surface-variant text-5xl block mb-3">group_off</span>
+                    <p className="font-label-md text-on-surface-variant">No users found</p>
+                  </td></tr>
+                ) : users.map((u, i) => (
                   <tr key={u.id} className={`border-b border-outline-variant/5 hover:bg-surface-container/50 transition-colors ${i % 2 === 0 ? '' : 'bg-surface-container/20'}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -155,7 +159,12 @@ export const AdminPanel = () => {
                 </tr>
               </thead>
               <tbody>
-                {recipes.map((r, i) => (
+                {recipes.length === 0 ? (
+                  <tr><td colSpan="4" className="px-6 py-16 text-center">
+                    <span className="material-symbols-outlined text-on-surface-variant text-5xl block mb-3">menu_book</span>
+                    <p className="font-label-md text-on-surface-variant">No recipes found</p>
+                  </td></tr>
+                ) : recipes.map((r, i) => (
                   <tr key={r.id} className={`border-b border-outline-variant/5 hover:bg-surface-container/50 transition-colors ${i % 2 === 0 ? '' : 'bg-surface-container/20'}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">

@@ -30,3 +30,10 @@ dist-ssr
 .env.*.local
 backend/.env
 frontend/.env
+
+# User uploads
+backend/uploads/
+uploads/
+
+# Build output
+frontend/dist/
