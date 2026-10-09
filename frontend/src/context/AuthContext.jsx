@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import * as authService from '../services/auth';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(() => {
     return localStorage.getItem('accessToken') || null;
@@ -20,8 +23,12 @@ export const AuthProvider = ({ children }) => {
           const profile = await authService.getProfile();
           setUser(profile);
         } catch (error) {
-          console.error('Failed to load profile, logging out...', error);
-          handleLogout();
+          console.error('Failed to load profile:', error);
+          if (error.response?.status === 403 && error.response?.data?.isVerified === false) {
+            navigate('/verify-otp', { state: { email: error.response.data.email || '' } });
+          } else {
+            handleLogout();
+          }
         }
       } else if (storedToken || storedRefreshToken) {
         localStorage.removeItem('accessToken');
@@ -38,16 +45,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     setAccessToken(data.accessToken);
-    setUser(data.user);
+    // Fetch full profile so role, isVerified, etc. are immediately available
+    const profile = await authService.getProfile();
+    setUser(profile);
     return data;
   };
 
   const handleRegister = async (name, email, password, confirm_password) => {
     const data = await authService.register(name, email, password, confirm_password);
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
-    setAccessToken(data.accessToken);
-    setUser(data.user);
     return data;
   };
 

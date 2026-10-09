@@ -53,6 +53,6 @@ const recipeSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 recipeSchema.index({ user: 1, createdAt: -1 });
-recipeSchema.index({ ingredientHash: 1 });
+// Duplicate index removed – field index:true provides this
 
 module.exports = mongoose.model('Recipe', recipeSchema);

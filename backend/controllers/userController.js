@@ -13,6 +13,9 @@ exports.getProfile = async (req, res) => {
       email: user.email,
       name: user.name,
       avatar: user.avatar ? `http://localhost:8000/uploads/${user.avatar}` : null,
+      isVerified: user.isVerified,
+      role: user.role,
+      is_superuser: user.is_superuser,
       diet_preference: user.diet_preference,
       generation: user.generation,
       spiceLevel: user.spiceLevel,
@@ -34,6 +37,7 @@ exports.updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Explicitly pick allowed fields — role/password/is_superuser cannot be changed via this endpoint
     const { 
       name, diet_preference, generation, spiceLevel, cookingSkill, 
       favoriteCuisines, dislikedIngredients, allergies, budgetPreference 
@@ -60,6 +64,9 @@ exports.updateProfile = async (req, res) => {
       email: user.email,
       name: user.name,
       avatar: user.avatar ? `http://localhost:8000/uploads/${user.avatar}` : null,
+      isVerified: user.isVerified,
+      role: user.role,
+      is_superuser: user.is_superuser,
       diet_preference: user.diet_preference,
       generation: user.generation,
       spiceLevel: user.spiceLevel,

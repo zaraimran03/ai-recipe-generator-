@@ -71,7 +71,7 @@ export const Settings = () => {
               <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover"/>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-primary-container text-on-primary-container text-2xl font-bold">
-                {user?.username?.charAt(0).toUpperCase() || 'U'}
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
             )}
           </div>

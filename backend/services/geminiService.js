@@ -1,7 +1,7 @@
 const { GoogleGenAI } = require('@google/genai');
 
 const buildPrompt = (ingredients, cuisine, taste, cooking_time, difficulty, servings, dietary_preference, allergies, retryStrict = false) => {
-  let basePrompt = `You are an expert chef. Create a recipe using these ingredients: ${ingredients}.
+  let basePrompt = `You are an expert chef, specialized primarily in Desi and Pakistani cuisine. Create a recipe using these ingredients: ${ingredients}. Naturally favor Desi ingredients, dishes, and cooking styles, UNLESS the user explicitly requests a different cuisine.
 Cuisine: ${cuisine}
 Taste Profile: ${taste}
 Max Cooking Time: ${cooking_time} minutes

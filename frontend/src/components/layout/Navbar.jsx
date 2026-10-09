@@ -84,26 +84,23 @@ export const Navbar = () => {
         <Link to="/" className="font-headline-md text-headline-md font-bold text-primary">
           AI Recipe Generator
         </Link>
-        <div className="hidden md:flex items-center gap-2 bg-surface-container-high rounded-full px-4 py-1.5 border border-outline-variant/20">
-          <span className="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
-          <input 
-            className="bg-transparent border-none focus:ring-0 text-label-md text-on-surface placeholder:text-on-surface-variant/50 w-40 outline-none" 
-            placeholder="Search recipes..." 
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <VoiceInputButton 
-            size="sm" 
-            onTranscript={(text, isFinal) => {
-              setSearchQuery(text);
-              // If you have a search trigger, you could fire it here when isFinal is true
-            }}
-          />
-        </div>
+        {user && (
+          <div className="hidden md:flex items-center gap-2 bg-surface-container-high rounded-full px-4 py-1.5 border border-outline-variant/20">
+            <span className="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+            <input 
+              className="bg-transparent border-none focus:ring-0 text-label-md text-on-surface placeholder:text-on-surface-variant/50 w-40 outline-none" 
+              placeholder="Search recipes..." 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        )}
       </div>
-      <div className="flex items-center gap-4 md:gap-8">
-        <nav className="hidden md:flex items-center gap-6">
+      
+      {user ? (
+        <div className="flex items-center gap-4 md:gap-8">
+          <nav className="hidden md:flex items-center gap-6">
           <Link to="/dashboard" className="text-primary font-bold border-b-2 border-primary pb-1 font-label-md text-label-md">Explore</Link>
           <Link to="/saved" className="text-on-surface-variant font-medium hover:scale-105 transition-transform duration-200 hover:text-primary font-label-md text-label-md">Saved</Link>
           <Link to="/nutrition" className="text-on-surface-variant font-medium hover:scale-105 transition-transform duration-200 hover:text-primary font-label-md text-label-md">Nutrition</Link>
@@ -181,20 +178,23 @@ export const Navbar = () => {
               </div>
             )}
           </div>
-
-          <button className="material-symbols-outlined text-primary" style={{fontVariationSettings: "'FILL' 1"}}>sparkles</button>
           
           <Link to="/settings" className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border border-primary/20 bg-surface-container-highest">
             {user?.avatar ? (
               <img alt="User Avatar" className="w-full h-full object-cover" src={user.avatar}/>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-primary-container text-on-primary-container font-bold">
-                {user?.username?.charAt(0).toUpperCase() || 'U'}
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
             )}
           </Link>
         </div>
       </div>
+      ) : (
+        <div className="flex items-center gap-4">
+          <Link to="/login" className="px-4 py-2 rounded-full border border-primary text-primary font-label-md text-label-md hover:bg-primary/5 transition-colors">Sign In</Link>
+        </div>
+      )}
     </header>
   );
 };

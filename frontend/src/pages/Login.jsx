@@ -2,14 +2,38 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm();
+  
+  const handleForgotPassword = async () => {
+    const email = getValues('email');
+    if (!email) {
+      setErrorMsg('Please enter your email address first to reset your password.');
+      return;
+    }
+    try {
+      setLoading(true);
+      setErrorMsg('');
+      await api.post('/auth/check-email/', { email });
+      navigate('/forgot-password', { state: { email } });
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setErrorMsg('Email not found');
+      } else {
+        setErrorMsg('Error checking email');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onSubmit = async (data) => {
     try {
@@ -18,7 +42,11 @@ export const Login = () => {
       await login(data.email, data.password);
       navigate('/dashboard');
     } catch (err) {
-      setErrorMsg(err.message || 'Login failed');
+      if (err.response?.data?.isVerified === false) {
+        navigate('/verify-otp', { state: { email: err.response.data.email || data.email } });
+      } else {
+        setErrorMsg(err.response?.data?.detail || err.response?.data?.message || err.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -82,16 +110,22 @@ export const Login = () => {
             <div className="space-y-2">
                 <div className="flex justify-between items-center ml-1">
                     <label className="font-label-md text-label-md text-on-surface-variant">Password</label>
-                    <a href="#" className="text-xs text-primary hover:underline">Forgot password?</a>
+                    <button type="button" onClick={handleForgotPassword} className="text-xs text-primary hover:underline">Forgot password?</button>
                 </div>
                 <div className="relative group">
                     <input 
                       {...register("password", { required: "Password is required" })}
-                      className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-lg px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 placeholder:text-outline" 
+                      className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-lg px-4 py-3.5 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 placeholder:text-outline" 
                       placeholder="••••••••" 
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                     />
-                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors focus:outline-none flex items-center justify-center"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility' : 'visibility_off'}</span>
+                    </button>
                 </div>
                 {errors.password && <span className="text-error text-xs ml-1">{errors.password.message}</span>}
             </div>

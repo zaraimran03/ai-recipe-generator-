@@ -22,6 +22,14 @@ const userSchema = new mongoose.Schema({
   allergies: { type: [String], default: [] },
   budgetPreference: { type: Number, default: null }, // e.g., max budget per meal
   is_superuser: { type: Boolean, default: false },
+  resetPasswordToken: { type: String, default: null },
+  resetPasswordExpires: { type: Date, default: null },
+  isVerified: { type: Boolean, default: false },
+  role: { type: String, default: 'user' },
+  otp: { type: String, default: null },
+  otpExpires: { type: Date, default: null },
+  otpAttempts: { type: Number, default: 0 },
+  otpLastSent: { type: Date, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -6,9 +6,9 @@ const Recipe = require('../models/Recipe');
 const History = require('../models/History');
 const Favorite = require('../models/Favorite');
 
-// Admin middleware check
+// Admin middleware check — role OR is_superuser
 const adminMiddleware = (req, res, next) => {
-  if (!req.user || !req.user.is_superuser) {
+  if (!req.user || (req.user.role !== 'admin' && !req.user.is_superuser)) {
     return res.status(403).json({ message: 'Admin access required' });
   }
   next();
@@ -34,7 +34,9 @@ router.get('/users/', async (req, res) => {
 
 router.patch('/users/:id/', async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-password');
+    // Strip sensitive fields — admin cannot escalate role or change password through this endpoint
+    const { password, role, is_superuser, ...safeBody } = req.body;
+    const user = await User.findByIdAndUpdate(req.params.id, safeBody, { new: true }).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json({...user.toObject(), id: user._id});
   } catch (error) {

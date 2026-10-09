@@ -30,7 +30,7 @@ exports.generate = async (req, res) => {
       }).join(', ');
       
       finalIngredients = finalIngredients ? `${finalIngredients}, ${pantryStr}` : pantryStr;
-    } else if (usePantry && !strictPantryMode) {
+    } else if (usePantry && !strictPantryMode && req.user) {
       const PantryModel = require('../models/Pantry');
       const pantry = await PantryModel.findOne({ user: req.user.id });
       if (pantry && pantry.items.length > 0) {
@@ -50,17 +50,19 @@ exports.generate = async (req, res) => {
     }
 
     // Cache check: if an identical ingredient combination exists for this user, return it
-    const hash = hashIngredients(finalIngredients);
-    const cached = await Recipe.findOne({ user: req.user.id, ingredientHash: hash });
-    if (cached) {
-      console.log('Cache hit for ingredient hash:', hash);
-      const obj = cached.toObject();
-      obj.id = obj._id;
-      obj.fromCache = true;
-      return res.status(200).json(obj);
+    if (req.user) {
+      const hash = hashIngredients(finalIngredients);
+      const cached = await Recipe.findOne({ user: req.user.id, ingredientHash: hash });
+      if (cached) {
+        console.log('Cache hit for ingredient hash:', hash);
+        const obj = cached.toObject();
+        obj.id = obj._id;
+        obj.fromCache = true;
+        return res.status(200).json(obj);
+      }
     }
 
-    const user = await User.findById(req.user.id);
+    const user = req.user ? await User.findById(req.user.id) : {};
     
     // Combine explicit request body params with user profile defaults/constraints
     const params = {
@@ -82,34 +84,44 @@ exports.generate = async (req, res) => {
     // Generate via Groq
     const generated = await groqService.generateRecipe(params);
 
-    const recipe = new Recipe({
-      user: req.user.id,
-      title: generated.title,
-      summary: generated.summary,
-      ingredients: generated.ingredients,
-      instructions: generated.instructions,
-      nutrition: generated.nutrition,
-      metadata: generated.metadata,
-      // Legacy flat fields for backward compatibility
-      servings: generated.metadata.servings,
-      difficulty: generated.metadata.difficulty,
-      time: generated.metadata.totalTimeMinutes,
-      cuisine: generated.metadata.cuisine,
-      dietary_preferences: generated.metadata.dietaryTags,
-      ingredientHash: hash,
-      generationAdaptation: generated.generationAdaptation,
-      estimatedCost: generated.estimatedCost,
-      substitutions: generated.substitutions,
-      tips: generated.tips
-    });
+    let obj;
+    if (req.user) {
+      const recipe = new Recipe({
+        user: req.user.id,
+        title: generated.title,
+        summary: generated.summary,
+        ingredients: generated.ingredients,
+        instructions: generated.instructions,
+        nutrition: generated.nutrition,
+        metadata: generated.metadata,
+        servings: generated.metadata.servings,
+        difficulty: generated.metadata.difficulty,
+        time: generated.metadata.totalTimeMinutes,
+        cuisine: generated.metadata.cuisine,
+        dietary_preferences: generated.metadata.dietaryTags,
+        ingredientHash: typeof hash !== 'undefined' ? hash : '',
+        generationAdaptation: generated.generationAdaptation,
+        estimatedCost: generated.estimatedCost,
+        substitutions: generated.substitutions,
+        tips: generated.tips
+      });
 
-    await recipe.save();
-
-    const history = new History({ user: req.user.id, recipe: recipe._id });
-    await history.save();
-
-    const obj = recipe.toObject();
-    obj.id = obj._id;
+      await recipe.save();
+      const history = new History({ user: req.user.id, recipe: recipe._id });
+      await history.save();
+      obj = recipe.toObject();
+      obj.id = obj._id;
+    } else {
+      // Guest recipe: do not save to DB
+      obj = { ...generated };
+      obj.servings = generated.metadata.servings;
+      obj.difficulty = generated.metadata.difficulty;
+      obj.time = generated.metadata.totalTimeMinutes;
+      obj.cuisine = generated.metadata.cuisine;
+      obj.dietary_preferences = generated.metadata.dietaryTags;
+      obj.id = 'guest_' + Date.now();
+    }
+    
     res.status(201).json(obj);
   } catch (error) {
     console.error('Recipe generation error:', error.message);

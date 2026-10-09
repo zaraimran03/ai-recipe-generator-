@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { listUsers, deleteUser, listAllRecipes, deleteAnyRecipe, getStats } from '../services/admin';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
 import SkeletonLoader from '../components/ui/SkeletonLoader';
@@ -18,11 +18,12 @@ export const AdminPanel = () => {
   const { toasts, addToast, removeToast } = useToast();
 
   const [stats, setStats] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const load = async () => {
     setLoading(true);
     try {
-      const [u, r, s] = await Promise.all([listUsers(), listAllRecipes(), getStats()]);
+      const [u, r, s] = await Promise.all([listUsers(searchQuery), listAllRecipes(searchQuery), getStats()]);
       setUsers(u);
       setRecipes(r);
       setStats(s);
@@ -30,7 +31,7 @@ export const AdminPanel = () => {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [tab]);
 
   const handleDeleteUser = async (id) => {
     if (id === currentUser?.id) { addToast("Can't delete your own account", 'error'); return; }
@@ -45,7 +46,7 @@ export const AdminPanel = () => {
     load();
   };
 
-  if (currentUser && !currentUser.is_staff) {
+  if (currentUser && currentUser.role !== 'admin' && !currentUser.is_superuser) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -64,20 +65,38 @@ export const AdminPanel = () => {
               <div className="font-label-sm text-on-surface-variant">Users</div>
             </GlassCard>
             <GlassCard className="!p-4 text-center">
-              <div className="font-headline-md text-secondary">{stats?.total_recipes_generated || recipes.length}</div>
+              <div className="font-headline-md text-secondary">{stats?.total_recipes || recipes.length}</div>
               <div className="font-label-sm text-on-surface-variant">Recipes</div>
+            </GlassCard>
+            <GlassCard className="!p-4 text-center">
+              <div className="font-headline-md text-tertiary">{stats?.total_favorites || 0}</div>
+              <div className="font-label-sm text-on-surface-variant">Total Saves</div>
             </GlassCard>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-surface-container rounded-xl w-fit">
-          {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-6 py-2 rounded-lg font-label-md transition-all ${tab === t ? 'bg-primary text-on-primary shadow' : 'text-on-surface-variant hover:text-on-surface'}`}>
-              {t}
-            </button>
-          ))}
+        {/* Tabs and Search */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex gap-1 p-1 bg-surface-container rounded-xl w-fit">
+            {TABS.map(t => (
+              <button key={t} onClick={() => {setTab(t); setSearchQuery('');}}
+                className={`px-6 py-2 rounded-lg font-label-md transition-all ${tab === t ? 'bg-primary text-on-primary shadow' : 'text-on-surface-variant hover:text-on-surface'}`}>
+                {t}
+              </button>
+            ))}
+          </div>
+          
+          <div className="relative w-full sm:w-64">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+            <input 
+              type="text" 
+              placeholder={`Search ${tab.toLowerCase()}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && load()}
+              className="w-full bg-surface-container border border-outline-variant/30 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-on-surface"
+            />
+          </div>
         </div>
 
         <GlassCard className="!p-0 overflow-hidden">
@@ -101,15 +120,15 @@ export const AdminPanel = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-sm overflow-hidden">
-                          {u.avatar ? <img src={u.avatar} className="w-full h-full object-cover" alt=""/> : u.username.charAt(0).toUpperCase()}
+                          {u.avatar ? <img src={u.avatar} className="w-full h-full object-cover" alt=""/> : (u.name || u.email).charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-label-md text-on-surface">{u.username}</span>
+                        <span className="font-label-md text-on-surface">{u.name || u.email.split('@')[0]}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 font-label-sm text-on-surface-variant hidden md:table-cell">{u.email}</td>
                     <td className="px-6 py-4 hidden lg:table-cell">
-                      <span className={`px-3 py-1 rounded-full text-label-sm ${u.is_staff ? 'bg-primary/15 text-primary' : 'bg-surface-variant text-on-surface-variant'}`}>
-                        {u.is_staff ? 'Admin' : 'User'}
+                      <span className={`px-3 py-1 rounded-full text-label-sm ${u.role === 'admin' || u.is_superuser ? 'bg-primary/15 text-primary' : 'bg-surface-variant text-on-surface-variant'}`}>
+                        {u.role === 'admin' || u.is_superuser ? 'Admin' : 'User'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -149,12 +168,22 @@ export const AdminPanel = () => {
                     </td>
                     <td className="px-6 py-4 font-label-sm text-on-surface-variant hidden lg:table-cell">{r.nutrition?.calories || 0} kcal</td>
                     <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleDeleteRecipe(r.id)}
-                        className="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded-lg transition-all"
-                      >
-                        <span className="material-symbols-outlined text-sm">delete</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          to={`/recipe/${r.id}`}
+                          className="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-primary-container/20 rounded-lg transition-all"
+                          title="Inspect Recipe"
+                        >
+                          <span className="material-symbols-outlined text-sm">visibility</span>
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteRecipe(r.id)}
+                          className="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded-lg transition-all"
+                          title="Delete Recipe"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

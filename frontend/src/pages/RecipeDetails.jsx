@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getRecipeById, addFavorite, deleteFavorite, getFavorites, substituteIngredient, adaptRecipe, interactRecipe } from '../services/recipe';
 import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
@@ -32,8 +32,17 @@ export const RecipeDetails = () => {
   const [adapting, setAdapting] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
 
+  const location = useLocation();
+
   useEffect(() => {
     const load = async () => {
+      if (location.state?.guestRecipe) {
+        setRecipe(location.state.guestRecipe);
+        setIsFavorite(false);
+        setLoading(false);
+        return;
+      }
+      
       try {
         const [r, favs] = await Promise.all([getRecipeById(id), getFavorites()]);
         setRecipe(r);

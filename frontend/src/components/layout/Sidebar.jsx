@@ -16,7 +16,7 @@ export const Sidebar = () => {
     { name: 'Settings',     path: '/settings',  icon: 'settings' },
   ];
 
-  if (user?.is_admin || user?.is_staff) {
+  if (user?.role === 'admin' || user?.is_superuser) {
     navItems.push({ name: 'Admin Panel', path: '/admin', icon: 'admin_panel_settings' });
   }
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { generateRecipe, getPantry } from '../services/recipe';
 import GlassCard from '../components/ui/GlassCard';
 import Button from '../components/ui/Button';
@@ -38,6 +39,7 @@ const dietaryOptions = ['Vegan', 'Vegetarian', 'Gluten-Free', 'Keto', 'Paleo', '
 const cuisineOptions = ['Any', 'Desi / South Asian', 'Italian', 'Mexican', 'Mediterranean', 'East Asian', 'Middle Eastern'];
 
 export const GenerateRecipe = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [ingredients, setIngredients] = useState([]);
   const [ingredientInput, setIngredientInput] = useState('');
@@ -71,6 +73,15 @@ export const GenerateRecipe = () => {
   const togglePantryItem = (id) => setSelectedPantry(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const onSubmit = async () => {
+    if (!user) {
+      const guestCount = parseInt(localStorage.getItem('guest_recipe_count') || '0', 10);
+      if (guestCount >= 2) {
+        navigate('/signup', { state: { message: 'You have reached your guest limit! Sign up to generate unlimited recipes.' } });
+        return;
+      }
+      localStorage.setItem('guest_recipe_count', guestCount + 1);
+    }
+
     setGenerating(true);
     try {
       const recipe = await generateRecipe({
@@ -84,7 +95,7 @@ export const GenerateRecipe = () => {
         strictPantryMode,
         pantryIngredients: pantryItems.filter(i => selectedPantry.includes(i._id)),
       });
-      navigate(`/recipe/${recipe.id}`, { state: { fromGenerate: true } });
+      navigate(`/recipe/${recipe.id}`, { state: { fromGenerate: true, guestRecipe: recipe.id.toString().startsWith('guest_') ? recipe : null } });
     } catch (e) {
       console.error(e);
       setGenerating(false);
@@ -121,6 +132,16 @@ export const GenerateRecipe = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group"
+      >
+        <span className="material-symbols-outlined text-[20px] transition-transform group-hover:-translate-x-0.5">arrow_back</span>
+        <span className="font-label-md text-label-md">Back</span>
+      </button>
+
       <div className="space-y-2">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card">
           <span className="material-symbols-outlined text-primary text-[18px]" style={{fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>
@@ -131,6 +152,7 @@ export const GenerateRecipe = () => {
         </h1>
         <p className="text-body-lg text-on-surface-variant">Tell us what you have and we'll craft the perfect recipe.</p>
       </div>
+
 
       <form onSubmit={e => { e.preventDefault(); onSubmit(); }} className="space-y-6">
         {/* Ingredients */}

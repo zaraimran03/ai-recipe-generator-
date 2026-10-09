@@ -22,8 +22,13 @@ export const ProtectedRoute = ({ children, adminOnly = false }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If page is gated for admin/staff only
-  if (adminOnly && !user.is_admin && !user.is_staff) {
+  // If user is not verified, redirect to OTP
+  if (!user.isVerified) {
+    return <Navigate to="/verify-otp" state={{ email: user.email }} replace />;
+  }
+
+  // If page is gated for admin only — check role OR legacy is_superuser
+  if (adminOnly && user.role !== 'admin' && !user.is_superuser) {
     return <Navigate to="/dashboard" replace />;
   }
 

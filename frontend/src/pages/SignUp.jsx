@@ -1,26 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { sendWelcomeEmail } from '../services/email';
 
 export const SignUp = () => {
   const { register: registerAuth } = useAuth();
   const navigate = useNavigate();
-  const [errorMsg, setErrorMsg] = useState('');
+  const location = useLocation();
+  const [errorMsg, setErrorMsg] = useState(location.state?.message || '');
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
   const pwd = watch("password", "");
 
-  // Basic strength checker
-  const checkStrength = (val) => {
+  useEffect(() => {
     let s = 0;
-    if (val.length >= 6) s++;
-    if (val.match(/[A-Z]/)) s++;
-    if (val.match(/[0-9]/) || val.match(/[^a-zA-Z0-9]/)) s++;
+    if (pwd.length >= 6) s++;
+    if (pwd.length >= 8 && pwd.match(/[A-Z]/)) s++;
+    if (pwd.length >= 8 && (pwd.match(/[0-9]/) || pwd.match(/[^a-zA-Z0-9]/))) s++;
     setPasswordStrength(s);
-  };
+  }, [pwd]);
 
   const onSubmit = async (data) => {
     if (data.password !== data.confirm_password) {
@@ -31,7 +34,9 @@ export const SignUp = () => {
       setErrorMsg('');
       setLoading(true);
       await registerAuth(data.name, data.email, data.password, data.confirm_password);
-      navigate('/dashboard');
+      
+      // Navigate to OTP page
+      navigate('/verify-otp', { state: { email: data.email } });
     } catch (err) {
       setErrorMsg(err.response?.data?.message || err.message || 'Registration failed');
     } finally {
@@ -74,7 +79,7 @@ export const SignUp = () => {
           </div>
           
           <div className="mt-12 rounded-lg overflow-hidden glass-card p-2 aspect-video relative group">
-            <img alt="AI Showcase" className="w-full h-full object-cover rounded-md transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5vdzgiUqt2weRReYBeWID6Ve_jWFjYffEF9da3fO5VCCQFg89YoNQekABNg_Q_0Du4qQw-Q4JKbwNvoZyZ6cYgAFVFPWarMUIwaRWuo-TJQvNqEces3AawMqEuKB5tpDmChbrH7h6ihRuXaqmXUA7Olvitb_dSyJ1U_KhaKOGf7Ik97UbJ1e__8H1vjlER3asLOktGU0x-WHB5nNkgSV94996Dyp2sXHyrvOeFiEx88RjHRbiuZPlc0wzqCDnyupAsL7QJ1LmDFSH"/>
+            <img alt="AI Showcase" className="w-full h-full object-cover rounded-md transition-transform duration-700 group-hover:scale-110" src="/images/showcase.jpg"/>
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent flex items-end p-6">
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary text-sm" style={{fontVariationSettings: "'FILL' 1"}}>colors_spark</span>
@@ -99,8 +104,9 @@ export const SignUp = () => {
           </div>
 
           {errorMsg && (
-            <div className="bg-error-container text-on-error-container p-3 rounded-lg mb-6 text-sm">
-              {errorMsg}
+            <div className="bg-primary/10 border border-primary/20 text-on-surface p-4 rounded-xl mb-6 text-sm flex gap-3 items-start shadow-sm">
+              <span className="material-symbols-outlined text-primary">info</span>
+              <span>{errorMsg}</span>
             </div>
           )}
 
@@ -141,24 +147,42 @@ export const SignUp = () => {
                     <label className="font-label-md text-label-md text-on-surface-variant block ml-1">Password</label>
                     <div className="relative group">
                         <input 
-                          {...register("password", { required: "Password required" })}
-                          onInput={(e) => checkStrength(e.target.value)}
-                          className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-lg px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 placeholder:text-outline" 
+                          {...register("password", { required: "Password required", minLength: { value: 6, message: "Min 6 chars" } })}
+                          className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-lg px-4 py-3.5 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 placeholder:text-outline" 
                           placeholder="••••••••" 
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                         />
+                        <button 
+                          type="button" 
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors focus:outline-none flex items-center justify-center"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility' : 'visibility_off'}</span>
+                        </button>
                     </div>
+                    {errors.password && <span className="text-error text-xs ml-1 block">{errors.password.message}</span>}
                 </div>
                 <div className="space-y-2">
                     <label className="font-label-md text-label-md text-on-surface-variant block ml-1">Confirm</label>
                     <div className="relative group">
                         <input 
-                          {...register("confirm_password", { required: "Confirm required" })}
-                          className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-lg px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 placeholder:text-outline" 
+                          {...register("confirm_password", { 
+                            required: "Confirm required",
+                            validate: val => val === pwd || "Passwords do not match"
+                          })}
+                          className="w-full bg-surface-container-highest/30 border border-outline-variant/30 rounded-lg px-4 py-3.5 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 placeholder:text-outline" 
                           placeholder="••••••••" 
-                          type="password"
+                          type={showConfirmPassword ? "text" : "password"}
                         />
+                        <button 
+                          type="button" 
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors focus:outline-none flex items-center justify-center"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">{showConfirmPassword ? 'visibility' : 'visibility_off'}</span>
+                        </button>
                     </div>
+                    {errors.confirm_password && <span className="text-error text-xs ml-1 block">{errors.confirm_password.message}</span>}
                 </div>
             </div>
 
@@ -177,17 +201,20 @@ export const SignUp = () => {
                 </div>
             </div>
 
-            <div className="flex items-start gap-3 px-1 py-1">
-                <div className="flex items-center h-5">
-                    <input 
-                      {...register("terms", { required: true })}
-                      className="w-5 h-5 rounded border-outline-variant/50 text-primary focus:ring-primary/40 bg-surface-container-highest cursor-pointer" 
-                      type="checkbox"
-                    />
+            <div className="px-1 py-1">
+                <div className="flex items-start gap-3">
+                    <div className="flex items-center h-5">
+                        <input 
+                          {...register("terms", { required: "You must agree to the Terms & Privacy Policy" })}
+                          className="w-5 h-5 rounded border-outline-variant/50 text-primary focus:ring-primary/40 bg-surface-container-highest cursor-pointer" 
+                          type="checkbox"
+                        />
+                    </div>
+                    <label className="text-xs text-on-surface-variant leading-tight cursor-pointer">
+                        I agree to the <a className="text-primary hover:underline transition-all" href="#">Terms of Service</a> and <a className="text-primary hover:underline transition-all" href="#">Privacy Policy</a>.
+                    </label>
                 </div>
-                <label className="text-xs text-on-surface-variant leading-tight cursor-pointer">
-                    I agree to the <a className="text-primary hover:underline transition-all" href="#">Terms of Service</a> and <a className="text-primary hover:underline transition-all" href="#">Privacy Policy</a>.
-                </label>
+                {errors.terms && <span className="text-error text-xs mt-1 block">{errors.terms.message}</span>}
             </div>
 
             <button disabled={loading} className="gradient-btn w-full py-4 rounded-lg text-on-primary font-label-md text-label-md shadow-xl flex items-center justify-center gap-2 group disabled:opacity-70">

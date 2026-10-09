@@ -10,6 +10,9 @@ import Layout from './components/layout/Layout';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import OTPVerification from './pages/OTPVerification';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import GenerateRecipe from './pages/GenerateRecipe';
 import RecipeDetails from './pages/RecipeDetails';
@@ -29,13 +32,20 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/verify-otp" element={<OTPVerification />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Authenticated Routes with Layout */}
+          {/* Routes accessible to Guests (use Layout without Sidebar) */}
+          <Route element={<Layout requireAuth={false} />}>
+            <Route path="/recipe/:id" element={<RecipeDetails />} />
+          </Route>
+
+          {/* Authenticated Routes with Layout and Sidebar */}
           <Route element={<Layout requireAuth={true} />}> 
             <Route element={<ProtectedRoutes />}> 
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/generate" element={<GenerateRecipe />} />
-              <Route path="/recipe/:id" element={<RecipeDetails />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/saved" element={<SavedRecipes />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/nutrition" element={<NutritionAnalytics />} />

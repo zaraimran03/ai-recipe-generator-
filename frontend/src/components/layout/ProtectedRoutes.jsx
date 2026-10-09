@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
  * redirects unauthenticated users to /login, and otherwise renders the child routes.
  */
 const ProtectedRoutes = () => {
-  const { accessToken, loading } = useAuth();
+  const { user, accessToken, loading } = useAuth();
 
   if (loading) {
     return (
@@ -23,6 +23,10 @@ const ProtectedRoutes = () => {
 
   if (!accessToken) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user && !user.isVerified) {
+    return <Navigate to="/verify-otp" state={{ email: user.email }} replace />;
   }
 
   return <Outlet />;

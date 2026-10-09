@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from './Toast';
 
-export const VoiceInputButton = ({ onTranscript, className = '', size = 'md', lang = 'en-US', continuous = false }) => {
+export const VoiceInputButton = ({ onTranscript, className = '', size = 'md', lang = 'en-US', continuous = true }) => {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
   const { addToast } = useToast();
