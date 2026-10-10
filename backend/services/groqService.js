@@ -4,7 +4,7 @@ const Groq = require('groq-sdk');
 const { z } = require('zod');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-const MODEL = 'openai/gpt-oss-120b';
+const MODEL = 'llama3-70b-8192';
 
 const SYSTEM_PROMPT = `You are an expert master chef, specialized primarily in Desi and Pakistani cuisine. Generate a detailed recipe adhering to the STRICT constraints provided by the user. Naturally favor Desi ingredients, dishes, and cooking styles, UNLESS the user explicitly requests a different cuisine.
 
