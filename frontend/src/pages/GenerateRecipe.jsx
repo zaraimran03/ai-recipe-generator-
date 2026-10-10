@@ -111,6 +111,7 @@ export const GenerateRecipe = () => {
           <div className="w-32 h-32 rounded-full border-4 border-surface-container-high flex items-center justify-center">
             <div className="w-32 h-32 rounded-full border-4 border-t-primary border-r-secondary border-b-transparent border-l-transparent animate-spin absolute inset-0"></div>
             <span className="material-symbols-outlined text-primary text-5xl" style={{fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>
+          </div>
         </div>
         <div className="space-y-3">
           <h2 className="font-headline-lg text-headline-lg text-on-surface">Crafting Your Recipe...</h2>
