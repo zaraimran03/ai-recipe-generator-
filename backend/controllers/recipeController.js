@@ -71,7 +71,8 @@ exports.generate = async (req, res) => {
     let hash;
     // Cache check: if an identical param combination exists for this user, return it
     if (req.user) {
-      hash = crypto.createHash('md5').update(JSON.stringify(params)).digest('hex');
+      // Added 'v2' to bust all previously cached bad recipes (like Teriyaki Burger Donburi)
+      hash = crypto.createHash('md5').update(JSON.stringify(params) + 'v2').digest('hex');
       const cached = await Recipe.findOne({ user: req.user.id, ingredientHash: hash });
       if (cached) {
         console.log('Cache hit for recipe params hash:', hash);

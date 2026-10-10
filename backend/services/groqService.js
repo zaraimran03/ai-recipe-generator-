@@ -4,14 +4,16 @@ const Groq = require('groq-sdk');
 const { z } = require('zod');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-const MODEL = 'llama3-70b-8192';
+const MODEL = 'openai/gpt-oss-120b';
 
-const SYSTEM_PROMPT = `You are an expert master chef, specialized primarily in Desi and Pakistani cuisine. Generate a detailed recipe adhering to the STRICT constraints provided by the user. Naturally favor Desi ingredients, dishes, and cooking styles, UNLESS the user explicitly requests a different cuisine.
+const SYSTEM_PROMPT = `You are an expert master chef. Generate a detailed recipe adhering to the STRICT constraints provided by the user.
 
-RULE 1: Never ignore the user's input ingredients. If specific ingredients (like 'Aloo' and 'Gobhi') are provided, you MUST produce a relevant recipe using them (e.g., Aloo Gobhi Curry/Sabzi), matching the requested cuisine. Do NOT substitute with unrelated dishes like Italian or Pasta unless explicitly asked for.
+RULE 1: Input Intent Handling. If the user requests a specific dish (e.g., "burger", "pizza", "biryani"), you MUST generate a standard, recognizable version of that exact dish. Do NOT deconstruct it into a bowl, salad, or unrelated fusion dish unless they explicitly asked for it. If they provide a list of ingredients (e.g., "chicken, rice, tomatoes"), create a cohesive recipe featuring those ingredients.
 RULE 2: Output the result strictly in clean structured JSON.
-RULE 3: If Restricted Pantry Mode is true, you MUST restrict the recipe to ONLY use the provided ingredients (and basics like salt, oil, water).
+RULE 3: If Restricted Pantry Mode is true, restrict the recipe to ONLY use the provided ingredients (and basics like salt, oil, water).
 RULE 4: Strictly follow the Max Cooking Time, Target Calories, and Dietary Preferences.
+RULE 5: Give the recipe a creative, appetizing, and culturally appropriate dish name for the 'title' field.
+RULE 6: Dietary Labels Validation. Only include dietary labels in 'dietaryTags' that accurately reflect the recipe. If Dietary Preferences are 'None', do NOT artificially label the recipe with subjective tags like "High-Protein" or "Low-Carb". You may only include factual, strict tags like "Vegan", "Vegetarian", or "Gluten-Free" IF the recipe natively and strictly complies without special substitutions (e.g., state in tips to ensure sauces/buns are gluten-free if claiming it).
 
 REQUIRED JSON SCHEMA:
 {
@@ -63,11 +65,16 @@ const RecipeSchema = z.object({
 });
 
 const buildUserPrompt = (params) => {
+  const prefs = Array.isArray(params.dietary_preference) ? params.dietary_preference : (params.dietary_preference ? [params.dietary_preference] : []);
+  const dietString = prefs.length > 0 ? prefs.join(', ') : 'None (Do not artificially optimize for diet, just make it delicious. Only tag natively compliant diets like Vegetarian/Vegan if applicable).';
+  const inputStr = Array.isArray(params.ingredients) ? params.ingredients.join(', ') : params.ingredients || 'None provided';
+  const cuisineStr = params.cuisine === 'Any' ? 'Any cuisine (Choose the most natural cuisine for the requested dish/ingredients)' : params.cuisine;
+
   return `Please generate a detailed recipe adhering to these STRICT constraints:
-- User Ingredients: ${Array.isArray(params.ingredients) ? params.ingredients.join(', ') : params.ingredients || 'None provided'} (MUST be the core of the dish)
+- User Input (Dish Name OR Ingredients): "${inputStr}" (If this is a dish name like "burger", generate a real burger with buns, etc.)
 - Restricted Pantry Mode: ${params.strictPantryMode ? 'true' : 'false'} (If true, use ONLY listed items)
-- Selected Cuisine: ${params.cuisine || 'Any'} (MUST match this regional cooking style)
-- Dietary Preferences: ${Array.isArray(params.dietary_preference) ? params.dietary_preference.join(', ') : params.dietary_preference || 'None'}
+- Selected Cuisine: ${cuisineStr}
+- Dietary Preferences: ${dietString}
 - Max Cooking Time: ${params.cooking_time || 30} mins
 - Target Calories: ${params.calories || 500} kcal
 - Servings: ${params.servings || 2}
@@ -92,34 +99,75 @@ const callGroq = async (systemPrompt, userContent, schema) => {
 };
 
 exports.generateRecipe = async (params) => {
-  try {
-    const recipe = await callGroq(SYSTEM_PROMPT, buildUserPrompt(params), RecipeSchema);
-    
-    // Strict Pantry Mode validation
-    if (params.strictPantryMode && params.ingredients) {
-      const allowedText = Array.isArray(params.ingredients) ? params.ingredients.join(' ').toLowerCase() : params.ingredients.toLowerCase();
+  let attempts = 0;
+  const maxAttempts = 3;
+  let lastErr;
+  let validationErrorMsg = '';
+  
+  while (attempts < maxAttempts) {
+    attempts++;
+    try {
+      const promptAddon = validationErrorMsg ? `\n\nPREVIOUS ERROR TO FIX: ${validationErrorMsg}` : '';
+      const recipe = await callGroq(SYSTEM_PROMPT, buildUserPrompt(params) + promptAddon, RecipeSchema);
       
-      const invalid = recipe.ingredients.find(i => {
-        if (i.isPantryStaple) return false;
-        // Check if any significant word of the ingredient exists in the allowed text
-        const nameWords = i.name.toLowerCase().split(' ').filter(w => w.length > 3);
-        const hasMatch = nameWords.some(w => allowedText.includes(w)) || allowedText.includes(i.name.toLowerCase());
-        return !hasMatch;
-      });
+      const inputStr = Array.isArray(params.ingredients) ? params.ingredients.join(', ').toLowerCase() : (params.ingredients || '').toLowerCase();
       
-      if (invalid) {
-        throw new Error(`Pantry constraint violated: AI included unauthorized ingredient "${invalid.name}"`);
+      // 1. Dish Intent Validation
+      if (inputStr && !inputStr.includes(',') && inputStr.split(' ').length <= 4) {
+        const titleWords = recipe.title.toLowerCase();
+        const words = inputStr.split(' ').filter(w => w.length > 2);
+        const hasCoreWord = words.length === 0 || words.some(w => titleWords.includes(w));
+        
+        if (!hasCoreWord) {
+          validationErrorMsg = `The user requested "${inputStr}", but you generated "${recipe.title}". You MUST generate the exact requested dish.`;
+          if (attempts < maxAttempts) continue;
+          throw new Error(`AI generated an unrelated dish: ${recipe.title}. Please try again.`);
+        }
       }
+      
+      // 2. Strict Pantry Mode validation
+      if (params.strictPantryMode && params.ingredients) {
+        const allowedText = inputStr;
+        const invalid = recipe.ingredients.find(i => {
+          if (i.isPantryStaple) return false;
+          const nameWords = i.name.toLowerCase().split(' ').filter(w => w.length > 3);
+          const hasMatch = nameWords.some(w => allowedText.includes(w)) || allowedText.includes(i.name.toLowerCase());
+          return !hasMatch;
+        });
+        
+        if (invalid) {
+          validationErrorMsg = `Pantry constraint violated: You included an unauthorized ingredient "${invalid.name}". Please restrict to only the provided items.`;
+          if (attempts < maxAttempts) continue;
+          throw new Error(`Pantry constraint violated: AI included unauthorized ingredient "${invalid.name}"`);
+        }
+      }
+      
+      // 3. Validate and clean up hallucinated dietary tags
+      const requestedDiets = Array.isArray(params.dietary_preference) ? params.dietary_preference.map(d => d.toLowerCase()) : [];
+      if (requestedDiets.length === 0) {
+        const subjectiveTags = ['high-protein', 'low-carb', 'keto', 'paleo', 'healthy', 'low-fat', 'dairy-free', 'gluten-free'];
+        recipe.metadata.dietaryTags = recipe.metadata.dietaryTags.filter(tag => {
+          const lower = tag.toLowerCase();
+          return !subjectiveTags.some(sub => lower.includes(sub));
+        });
+      }
+
+      return recipe;
+    } catch (err) {
+      lastErr = err;
+      if (err?.name === 'ZodError') {
+        validationErrorMsg = 'Generated recipe did not match required schema structure. Fix the JSON format.';
+        continue;
+      }
+      // For immediate failures (API down, network error), don't retry logic.
+      if (err.message && (err.message.includes('API') || err.message.includes('decommissioned'))) throw err;
     }
-    
-    return recipe;
-  } catch (err) {
-    if (err?.name === 'ZodError') {
-      console.error('Schema validation failed:', JSON.stringify(err.errors, null, 2));
-      throw new Error('Generated recipe did not match required schema structure.');
-    }
-    throw err;
   }
+  
+  if (lastErr?.name === 'ZodError') {
+    throw new Error('Generated recipe did not match required schema structure.');
+  }
+  throw lastErr;
 };
 
 exports.adaptRecipe = async (existingRecipe, userRequest, params) => {

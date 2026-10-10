@@ -127,27 +127,36 @@ exports.refresh = async (req, res) => {
       return res.status(400).json({ message: 'Refresh token is required' });
     }
 
-    jwt.verify(refresh, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
-      if (err) {
-        return res.status(401).json({ message: 'Invalid refresh token' });
-      }
+    let decoded;
+    try {
+      decoded = jwt.verify(refresh, process.env.JWT_REFRESH_SECRET);
+    } catch (err) {
+      return res.status(401).json({ message: 'Invalid refresh token' });
+    }
 
-      const user = await User.findById(decoded.id);
-      if (!user) {
-        return res.status(401).json({ message: 'User not found' });
-      }
-      if (!user.refreshTokens.includes(refresh)) {
-        return res.status(401).json({ message: 'Refresh token revoked' });
-      }
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+    if (!user.refreshTokens.includes(refresh)) {
+      return res.status(401).json({ message: 'Refresh token revoked' });
+    }
 
-      // Token rotation
-      const tokens = generateTokens(user);
-      user.refreshTokens = user.refreshTokens.filter(t => t !== refresh);
-      user.refreshTokens.push(tokens.refresh);
+    // Token rotation
+    const tokens = generateTokens(user);
+    user.refreshTokens = user.refreshTokens.filter(t => t !== refresh);
+    user.refreshTokens.push(tokens.refresh);
+    
+    try {
       await user.save();
+    } catch (saveError) {
+      if (saveError.name === 'VersionError') {
+        return res.status(409).json({ message: 'Concurrent refresh. Please try again.' });
+      }
+      throw saveError;
+    }
 
-      res.json({ access: tokens.access, refresh: tokens.refresh });
-    });
+    res.json({ access: tokens.access, refresh: tokens.refresh });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

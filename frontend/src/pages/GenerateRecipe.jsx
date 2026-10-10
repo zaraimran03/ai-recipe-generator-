@@ -93,6 +93,7 @@ export const GenerateRecipe = () => {
         servings,
         cooking_time: maxTime,
         strictPantryMode,
+        usePantry: selectedPantry.length > 0,
         pantryIngredients: pantryItems.filter(i => selectedPantry.includes(i._id)),
       });
       navigate(`/recipe/${recipe.id}`, { state: { fromGenerate: true, guestRecipe: recipe.id.toString().startsWith('guest_') ? recipe : null } });
@@ -110,9 +111,6 @@ export const GenerateRecipe = () => {
           <div className="w-32 h-32 rounded-full border-4 border-surface-container-high flex items-center justify-center">
             <div className="w-32 h-32 rounded-full border-4 border-t-primary border-r-secondary border-b-transparent border-l-transparent animate-spin absolute inset-0"></div>
             <span className="material-symbols-outlined text-primary text-5xl" style={{fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>
-          </div>
-          <span className="sparkle-ai material-symbols-outlined text-primary text-2xl" style={{top:'-8px', left:'50%'}}>colors_spark</span>
-          <span className="sparkle-ai material-symbols-outlined text-secondary text-lg" style={{bottom:'-8px', right:'10%', animationDelay:'1s'}}>colors_spark</span>
         </div>
         <div className="space-y-3">
           <h2 className="font-headline-lg text-headline-lg text-on-surface">Crafting Your Recipe...</h2>
