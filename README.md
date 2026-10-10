@@ -1,12 +1,12 @@
 <div align="center">
 
-# 🍳 AI Chef — AI-Powered Recipe Generator
+# 🍳 SaaDish AI — AI-Powered Recipe Generator
 
 **Transform your ingredients into delicious recipes with the power of AI.**
 
 Built with React · Node.js · MongoDB · Groq AI
 
-![Dashboard Preview](docs/images/dashboard-preview.jpg)
+![SaaDish AI Dashboard](docs/images/dashboard-preview.jpg)
 
 </div>
 

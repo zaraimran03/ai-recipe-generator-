@@ -82,7 +82,7 @@ export const Navbar = () => {
     <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface/80 backdrop-blur-lg border-b border-border-subtle/10 shadow-sm shadow-primary/5">
       <div className="flex items-center gap-6 md:gap-8">
         <Link to="/" className="font-headline-md text-headline-md font-bold text-primary">
-          AI Recipe Generator
+          SaaDish AI
         </Link>
         {user && (
           <div className="hidden md:flex items-center gap-2 bg-surface-container-high rounded-full px-4 py-1.5 border border-outline-variant/20">

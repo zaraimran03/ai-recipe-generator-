@@ -34,7 +34,7 @@ exports.sendOTPEmail = async (email, otp) => {
             {
                 to_email: email,
                 otp: otp,
-                reply_to: "noreply@airecipegenerator.com"
+                reply_to: "noreply@saadish.ai"
             },
             {
                 publicKey: EMAILJS_PUBLIC_KEY,
@@ -64,7 +64,7 @@ exports.sendPasswordResetOTPEmail = async (email, otp) => {
             {
                 to_email: email,
                 otp: otp,
-                reply_to: "noreply@airecipegenerator.com"
+                reply_to: "noreply@saadish.ai"
             },
             {
                 publicKey: EMAILJS_PUBLIC_KEY,

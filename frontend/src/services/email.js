@@ -19,7 +19,7 @@ export const sendWelcomeEmail = async (userEmail, userName) => {
     await emailjs.send(EMAILJS_SERVICE_ID, TEMPLATES.WELCOME_EMAIL, {
       to_email: userEmail,
       to_name: userName,
-      message: 'Welcome to AI Recipe Generator! We are excited to have you on board. Start exploring and generating delicious recipes right away.'
+      message: 'Welcome to SaaDish AI! We are excited to have you on board. Start exploring and generating delicious recipes right away.'
     });
     console.log('Welcome email sent successfully');
   } catch (error) {

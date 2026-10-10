@@ -145,7 +145,7 @@ export const GenerateRecipe = () => {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card">
           <span className="material-symbols-outlined text-primary text-[18px]" style={{fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>
-          <span className="text-label-md text-primary">AI Recipe Generator</span>
+          <span className="text-label-md text-primary">SaaDish AI</span>
         </div>
         <h1 className="font-headline-xl text-headline-xl text-on-surface">
           What's in your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">fridge?</span>

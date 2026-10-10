@@ -135,7 +135,7 @@ exports.adaptRecipe = async (existingRecipe, userRequest, params) => {
 
 exports.preserveFamilyRecipe = async (rawText) => {
   try {
-    const preservePrompt = `You are "Chef AI". You are given an unstructured family recipe in natural language.
+    const preservePrompt = `You are "SaaDish AI". You are given an unstructured family recipe in natural language.
 Convert it into a structured recipe matching the JSON schema.
 IMPORTANT RULE: Do NOT invent exact measurements if they weren't provided. Use "Quantity not specified" or "Add according to the original recipe". You may provide an optional estimated measurement separately in the tips array, clearly marked as "AI estimate — verify with the original recipe."
 Return ONLY raw JSON.`;
@@ -164,7 +164,7 @@ exports.getSubstitute = async (recipeTitle, missingIngredient) => {
     adjustmentNote: z.string(),
   });
   return await callGroq(
-    `You are "Chef AI". Suggest a household pantry substitute for a missing ingredient. Respond ONLY with valid raw JSON: { "original": "String", "substitute": "String", "adjustmentNote": "String" }`,
+    `You are "SaaDish AI". Suggest a household pantry substitute for a missing ingredient. Respond ONLY with valid raw JSON: { "original": "String", "substitute": "String", "adjustmentNote": "String" }`,
     `Recipe: "${recipeTitle}". Missing ingredient: "${missingIngredient}". Suggest a household substitute.`,
     SubstituteSchema
   );

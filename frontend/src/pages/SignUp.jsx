@@ -56,7 +56,7 @@ export const SignUp = () => {
               <div className="w-12 h-12 bg-primary-container rounded-xl flex items-center justify-center shadow-lg shadow-primary-container/20">
                 <span className="material-symbols-outlined text-on-primary-container" style={{fontVariationSettings: "'FILL' 1"}}>restaurant</span>
               </div>
-              <h1 className="font-headline-lg text-headline-lg font-extrabold tracking-tight">AI Chef</h1>
+              <h1 className="font-headline-lg text-headline-lg font-extrabold tracking-tight">SaaDish AI</h1>
             </div>
             <h2 className="font-headline-xl text-headline-xl mb-6 leading-tight">Master the art of <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">intelligent cooking.</span></h2>
             <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">

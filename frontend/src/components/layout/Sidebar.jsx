@@ -28,7 +28,7 @@ export const Sidebar = () => {
             <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>restaurant</span>
           </div>
           <div>
-            <h2 className="font-headline-md text-[18px] font-bold text-primary">AI Chef</h2>
+            <h2 className="font-headline-md text-[18px] font-bold text-primary">SaaDish AI</h2>
             <p className="font-label-sm text-on-surface-variant text-[10px] tracking-widest uppercase">Culinary Intelligence</p>
           </div>
         </div>

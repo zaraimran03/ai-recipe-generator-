@@ -17,7 +17,7 @@ export const Landing = () => {
     <div className="bg-background text-on-background font-body-md min-h-screen sparkle-bg overflow-x-hidden">
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface/80 backdrop-blur-lg border-b border-border-subtle/10 shadow-sm shadow-primary/5">
         <Link to="/" className="font-headline-md text-headline-md font-bold text-primary">
-          AI Recipe Generator
+          SaaDish AI
         </Link>
         <div className="flex items-center gap-4">
           {user ? (
