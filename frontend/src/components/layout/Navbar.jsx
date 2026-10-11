@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getRecipes } from '../../services/recipe';
 import VoiceInputButton from '../ui/VoiceInputButton';
@@ -37,11 +37,16 @@ const getTimeAgo = (date) => {
 export const Navbar = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [readIds, setReadIds] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    setSearchQuery(new URLSearchParams(location.search).get('search') || '');
+  }, [location.search]);
 
   useEffect(() => {
     const load = async () => {
@@ -78,6 +83,12 @@ export const Navbar = () => {
     setReadIds(new Set(notifications.map(n => n.id)));
   };
 
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const query = searchQuery.trim();
+    navigate(query ? `/saved?search=${encodeURIComponent(query)}` : '/saved');
+  };
+
   return (
     <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface/80 backdrop-blur-lg border-b border-border-subtle/10 shadow-sm shadow-primary/5">
       <div className="flex items-center gap-6 md:gap-8">
@@ -85,16 +96,19 @@ export const Navbar = () => {
           SaaDish AI
         </Link>
         {user && (
-          <div className="hidden md:flex items-center gap-2 bg-surface-container-high rounded-full px-4 py-1.5 border border-outline-variant/20">
-            <span className="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+          <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2 bg-surface-container-high rounded-full px-4 py-1.5 border border-outline-variant/20">
+            <button type="submit" aria-label="Search recipes" className="flex items-center">
+              <span className="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+            </button>
             <input 
               className="bg-transparent border-none focus:ring-0 text-label-md text-on-surface placeholder:text-on-surface-variant/50 w-40 outline-none" 
               placeholder="Search recipes..." 
               type="text"
+              aria-label="Search recipes"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
+          </form>
         )}
       </div>
       

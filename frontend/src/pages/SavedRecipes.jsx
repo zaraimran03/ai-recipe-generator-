@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getRecipes, getFavorites, deleteFavorite, deleteRecipe } from '../services/recipe';
 import Button from '../components/ui/Button';
 import SkeletonLoader from '../components/ui/SkeletonLoader';
@@ -9,6 +9,7 @@ const TABS = ['All Recipes', 'Favorites', 'History'];
 
 export const SavedRecipes = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState('All Recipes');
   const [recipes, setRecipes] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -27,6 +28,10 @@ export const SavedRecipes = () => {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    setSearch(searchParams.get('search') || '');
+  }, [searchParams]);
 
   const displayed = (tab === 'Favorites' ? favorites : recipes)
     .filter(r => r.title.toLowerCase().includes(search.toLowerCase()));
