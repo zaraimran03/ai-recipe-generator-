@@ -95,6 +95,13 @@ export const RecipeDetails = () => {
 
   if (loading) return (
     <div className="space-y-6 max-w-5xl mx-auto">
+      <button
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container-high/80 hover:bg-surface-container-highest border border-outline-variant/30 text-on-surface hover:text-primary transition-all group cursor-pointer"
+      >
+        <span className="material-symbols-outlined text-[20px] transition-transform group-hover:-translate-x-1">arrow_back</span>
+        <span className="font-label-md font-medium">Back</span>
+      </button>
       <div className="shimmer-bg h-[300px] rounded-2xl animate-pulse" />
       <SkeletonLoader type="text" lines={4} />
     </div>
@@ -157,11 +164,50 @@ export const RecipeDetails = () => {
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Top Navigation Row */}
+        <div className="flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => location.state?.fromGenerate ? navigate('/generate') : navigate(-1)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container-high/60 hover:bg-surface-container-high border border-outline-variant/30 text-on-surface hover:text-primary transition-all duration-200 group cursor-pointer shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[20px] transition-transform group-hover:-translate-x-1">arrow_back</span>
+            <span className="font-label-md font-medium">
+              {location.state?.fromGenerate ? 'Back to Generator' : 'Back to Recipes'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/generate')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-on-surface-variant hover:text-primary hover:bg-surface-container-high border border-outline-variant/20 transition-all text-label-md cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+            <span>New Recipe</span>
+          </button>
+        </div>
+
         {/* Hero */}
         <div className="relative w-full h-[300px] md:h-[420px] rounded-2xl overflow-hidden group bg-gradient-to-br from-primary-container to-secondary-container flex items-center justify-center">
           <span className="material-symbols-outlined text-[120px] text-primary opacity-30 absolute">restaurant</span>
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+
+          {/* Top-Left Back Button on Hero Banner */}
+          <div className="absolute top-6 left-6 z-10">
+            <button
+              type="button"
+              onClick={() => location.state?.fromGenerate ? navigate('/generate') : navigate(-1)}
+              className="flex items-center gap-2 px-4 py-2 glass-card rounded-full text-on-surface hover:text-primary transition-all hover:scale-105 shadow-md cursor-pointer group"
+              title="Go back"
+            >
+              <span className="material-symbols-outlined text-lg transition-transform group-hover:-translate-x-1">arrow_back</span>
+              <span className="text-label-md font-medium">
+                {location.state?.fromGenerate ? 'Back to Generator' : 'Back'}
+              </span>
+            </button>
+          </div>
+
           <div className="absolute bottom-0 left-0 w-full p-8 space-y-4">
             <div className="flex flex-wrap gap-2">
               {meta.difficulty && <span className="glass-card px-4 py-1.5 rounded-full text-label-sm uppercase tracking-wider text-primary border-primary/20">{meta.difficulty}</span>}
@@ -178,11 +224,11 @@ export const RecipeDetails = () => {
               {recipe.estimatedCost > 0 && <div className="flex items-center gap-2"><span className="material-symbols-outlined text-primary">payments</span><span className="font-label-md">~Rs. {recipe.estimatedCost}</span></div>}
             </div>
           </div>
-          <div className="absolute top-6 right-6 flex gap-3">
-            <button onClick={() => setCookMode(true)} className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-full text-label-md hover:opacity-90 transition-all hover:scale-105">
+          <div className="absolute top-6 right-6 flex gap-3 z-10">
+            <button onClick={() => setCookMode(true)} className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-full text-label-md hover:opacity-90 transition-all hover:scale-105 shadow-md">
               <span className="material-symbols-outlined text-lg">restaurant_menu</span> Cook Mode
             </button>
-            <button onClick={toggleFavorite} className={`w-12 h-12 glass-card rounded-full flex items-center justify-center transition-all hover:scale-110 ${isFavorite ? 'text-primary' : 'text-on-surface-variant'}`}>
+            <button onClick={toggleFavorite} className={`w-12 h-12 glass-card rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-md ${isFavorite ? 'text-primary' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined" style={isFavorite ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
             </button>
           </div>
@@ -233,6 +279,26 @@ export const RecipeDetails = () => {
                 })}
               </div>
             </GlassCard>
+
+            {/* Bottom Navigation Actions */}
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+              <Button
+                variant="outlined"
+                onClick={() => location.state?.fromGenerate ? navigate('/generate') : navigate(-1)}
+                className="!py-3 !px-6 flex items-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">arrow_back</span>
+                {location.state?.fromGenerate ? 'Back to Generator' : 'Back to Recipes'}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => navigate('/generate')}
+                className="!py-3 !px-6 flex items-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">auto_awesome</span>
+                Generate Another Recipe
+              </Button>
+            </div>
           </div>
 
           {/* Sidebar */}

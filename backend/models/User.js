@@ -7,12 +7,12 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String, default: null },
   diet_preference: {
     type: String,
-    enum: ['vegetarian', 'vegan', 'paleo', 'keto', 'gluten_free', 'none', ''],
+    enum: ['vegetarian', 'vegan', 'paleo', 'keto', 'gluten_free', 'dairy_free', 'halal', 'low_carb', 'none', ''],
     default: 'none',
   },
   generation: {
     type: String,
-    enum: ['GEN_Z', 'MILLENNIAL', 'GEN_X', 'OLDER_ADULT', null],
+    enum: ['GEN_Z', 'MILLENNIAL', 'GEN_X', 'OLDER_ADULT', null, ''],
     default: null
   },
   spiceLevel: { type: String, default: '' },

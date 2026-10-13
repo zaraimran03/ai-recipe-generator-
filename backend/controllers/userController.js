@@ -42,16 +42,35 @@ exports.updateProfile = async (req, res) => {
       name, diet_preference, generation, spiceLevel, cookingSkill, 
       favoriteCuisines, dislikedIngredients, allergies, budgetPreference 
     } = req.body;
+
+    const parseArray = (val) => {
+      if (Array.isArray(val)) return val.map(s => String(s).trim()).filter(Boolean);
+      if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+      return [];
+    };
     
-    if (name !== undefined) user.name = name;
-    if (diet_preference !== undefined) user.diet_preference = diet_preference;
-    if (generation !== undefined) user.generation = generation;
+    if (name !== undefined) user.name = String(name).trim();
+    if (diet_preference !== undefined) {
+      const normalizedDiet = String(diet_preference || '').toLowerCase().replace(/[-\s]/g, '_');
+      const validDiets = ['vegetarian', 'vegan', 'paleo', 'keto', 'gluten_free', 'dairy_free', 'halal', 'low_carb', 'none', ''];
+      user.diet_preference = validDiets.includes(normalizedDiet) ? normalizedDiet : 'none';
+    }
+    if (generation !== undefined) {
+      const validGenerations = ['GEN_Z', 'MILLENNIAL', 'GEN_X', 'OLDER_ADULT'];
+      user.generation = (generation && validGenerations.includes(generation)) ? generation : null;
+    }
     if (spiceLevel !== undefined) user.spiceLevel = spiceLevel;
     if (cookingSkill !== undefined) user.cookingSkill = cookingSkill;
-    if (favoriteCuisines !== undefined) user.favoriteCuisines = favoriteCuisines;
-    if (dislikedIngredients !== undefined) user.dislikedIngredients = dislikedIngredients;
-    if (allergies !== undefined) user.allergies = allergies;
-    if (budgetPreference !== undefined) user.budgetPreference = budgetPreference;
+    if (favoriteCuisines !== undefined) user.favoriteCuisines = parseArray(favoriteCuisines);
+    if (dislikedIngredients !== undefined) user.dislikedIngredients = parseArray(dislikedIngredients);
+    if (allergies !== undefined) user.allergies = parseArray(allergies);
+    if (budgetPreference !== undefined) {
+      if (budgetPreference === '' || budgetPreference === null || isNaN(Number(budgetPreference))) {
+        user.budgetPreference = null;
+      } else {
+        user.budgetPreference = Number(budgetPreference);
+      }
+    }
 
     if (req.file) {
       user.avatar = req.file.filename;
@@ -77,6 +96,7 @@ exports.updateProfile = async (req, res) => {
       budgetPreference: user.budgetPreference
     });
   } catch (error) {
+    console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

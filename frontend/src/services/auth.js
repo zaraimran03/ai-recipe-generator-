@@ -51,18 +51,37 @@ export const getProfile = async () => {
 };
 
 export const updateProfile = async (profileData) => {
-  const formData = new FormData();
-  Object.keys(profileData).forEach(key => {
-    if (profileData[key] !== undefined && profileData[key] !== null) {
-      formData.append(key, profileData[key]);
-    }
-  });
+  if (profileData instanceof FormData) {
+    const response = await api.put('/user/profile/', profileData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  }
 
-  const response = await api.put('/user/profile/', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
+  // Check if any field is a File / Blob
+  const hasFile = Object.values(profileData || {}).some(val => val instanceof File || val instanceof Blob);
+
+  if (hasFile) {
+    const formData = new FormData();
+    Object.keys(profileData).forEach(key => {
+      const val = profileData[key];
+      if (val !== undefined && val !== null) {
+        if (Array.isArray(val)) {
+          formData.append(key, val.join(', '));
+        } else {
+          formData.append(key, val);
+        }
+      }
+    });
+
+    const response = await api.put('/user/profile/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  }
+
+  // Standard JSON update preserves true types (arrays, numbers, nulls)
+  const response = await api.put('/user/profile/', profileData);
   return response.data;
 };
 
