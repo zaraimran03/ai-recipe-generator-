@@ -62,8 +62,8 @@ describe('Input Validation', () => {
     expect(res.body.errors.some(e => e.includes('password'))).toBe(true);
   });
 
-  test('POST /auth/login/ — rejects empty body', async () => {
-    const res = await request(app).post('/auth/login/').send({});
+  test('POST /auth/login — rejects empty body', async () => {
+    const res = await request(app).post('/auth/login').send({});
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Validation failed');
   });

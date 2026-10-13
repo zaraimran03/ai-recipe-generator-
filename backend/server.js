@@ -61,3 +61,9 @@ mongoose.connect(mongoURI)
     console.error('MongoDB connection error:', err);
     process.exit(1);
   });
+
+export default {
+  async fetch(request, env, ctx) {
+    return new Response("SaaDish AI Backend is Running on Cloudflare Worker!");
+  }
+};

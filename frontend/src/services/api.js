@@ -9,6 +9,14 @@ const api = axios.create({
   },
 });
 
+// Yeh automatic aakhir se slash (/) hata dega
+api.interceptors.request.use((config) => {
+  if (config.url && config.url.endsWith('/') && config.url.length > 1) {
+    config.url = config.url.slice(0, -1);
+  }
+  return config;
+});
+
 // Request interceptor to attach token
 api.interceptors.request.use(
   (config) => {
