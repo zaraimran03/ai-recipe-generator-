@@ -53,8 +53,10 @@ export const GenerateRecipe = () => {
   const [strictPantryMode, setStrictPantryMode] = useState(false);
 
   React.useEffect(() => {
-    getPantry().then(setPantryItems).catch(console.error);
-  }, []);
+    if (user) {
+      getPantry().then(setPantryItems).catch(console.error);
+    }
+  }, [user]);
 
   // Stepper state — managed independently from react-hook-form
   const [maxTime, setMaxTime] = useState(30);

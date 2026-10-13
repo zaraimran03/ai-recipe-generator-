@@ -43,8 +43,8 @@ function App() {
 
           {/* Authenticated Routes with Layout and Sidebar */}
           <Route element={<Layout requireAuth={true} />}> 
+            <Route path="/generate" element={<GenerateRecipe />} />
             <Route element={<ProtectedRoutes />}> 
-              <Route path="/generate" element={<GenerateRecipe />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/saved" element={<SavedRecipes />} />
               <Route path="/settings" element={<Settings />} />
