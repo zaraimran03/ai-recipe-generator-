@@ -2,6 +2,7 @@
 
 const Groq = require('groq-sdk');
 const { z } = require('zod');
+const AiLog = require('../models/AiLog');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const MODEL = 'openai/gpt-oss-120b';
@@ -82,20 +83,57 @@ const buildUserPrompt = (params) => {
 - Disliked Ingredients: ${Array.isArray(params.dislikedIngredients) ? params.dislikedIngredients.join(', ') : params.dislikedIngredients || 'None'}`;
 };
 
-const callGroq = async (systemPrompt, userContent, schema) => {
-  const completion = await groq.chat.completions.create({
-    model: MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userContent },
-    ],
-    response_format: { type: 'json_object' },
-    temperature: 0.2,
-    max_tokens: 2500,
-  });
-  const rawContent = completion.choices[0]?.message?.content;
-  if (!rawContent) throw new Error('Groq returned an empty response.');
-  return schema.parse(JSON.parse(rawContent));
+const callGroq = async (systemPrompt, userContent, schema, operation = 'generate') => {
+  const startTime = Date.now();
+  let durationMs = 0;
+  try {
+    const completion = await groq.chat.completions.create({
+      model: MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.2,
+      max_tokens: 2500,
+    });
+    durationMs = Date.now() - startTime;
+    const rawContent = completion.choices[0]?.message?.content;
+    if (!rawContent) throw new Error('Groq returned an empty response.');
+    const parsed = schema.parse(JSON.parse(rawContent));
+
+    // Asynchronously record success telemetry without blocking
+    try {
+      await AiLog.create({
+        operation,
+        model: MODEL,
+        status: 'success',
+        durationMs,
+        promptTokens: completion.usage?.prompt_tokens || 0,
+        completionTokens: completion.usage?.completion_tokens || 0,
+        totalTokens: completion.usage?.total_tokens || 0,
+      });
+    } catch (logErr) {
+      console.warn('AiLog success write warning:', logErr.message);
+    }
+
+    return parsed;
+  } catch (err) {
+    durationMs = Date.now() - startTime;
+    try {
+      const sanitizedError = String(err?.message || 'Unknown error').replace(/[a-zA-Z0-9_-]{24,}/g, '[REDACTED]');
+      await AiLog.create({
+        operation,
+        model: MODEL,
+        status: 'error',
+        durationMs,
+        error: sanitizedError,
+      });
+    } catch (logErr) {
+      console.warn('AiLog error write warning:', logErr.message);
+    }
+    throw err;
+  }
 };
 
 exports.generateRecipe = async (params) => {
@@ -108,7 +146,7 @@ exports.generateRecipe = async (params) => {
     attempts++;
     try {
       const promptAddon = validationErrorMsg ? `\n\nPREVIOUS ERROR TO FIX: ${validationErrorMsg}` : '';
-      const recipe = await callGroq(SYSTEM_PROMPT, buildUserPrompt(params) + promptAddon, RecipeSchema);
+      const recipe = await callGroq(SYSTEM_PROMPT, buildUserPrompt(params) + promptAddon, RecipeSchema, 'generate');
       
       const inputStr = Array.isArray(params.ingredients) ? params.ingredients.join(', ').toLowerCase() : (params.ingredients || '').toLowerCase();
       
@@ -174,7 +212,7 @@ exports.adaptRecipe = async (existingRecipe, userRequest, params) => {
   try {
     const adaptSystemPrompt = SYSTEM_PROMPT + `\n\nADAPTATION TASK:\nYou are provided with an existing recipe and a user request (e.g. "make it cheaper", "make it vegetarian"). Modify the recipe to satisfy the request and any provided constraints, while preserving the core identity of the original recipe. Return the modified recipe matching the JSON schema.`;
     const userContent = `Existing Recipe:\n${JSON.stringify(existingRecipe)}\n\nUser Request: ${userRequest}\n\nConstraints:\n${buildUserPrompt(params)}`;
-    return await callGroq(adaptSystemPrompt, userContent, RecipeSchema);
+    return await callGroq(adaptSystemPrompt, userContent, RecipeSchema, 'adapt');
   } catch (err) {
     if (err?.name === 'ZodError') throw new Error('Adapted recipe did not match schema.');
     throw err;
@@ -187,7 +225,7 @@ exports.preserveFamilyRecipe = async (rawText) => {
 Convert it into a structured recipe matching the JSON schema.
 IMPORTANT RULE: Do NOT invent exact measurements if they weren't provided. Use "Quantity not specified" or "Add according to the original recipe". You may provide an optional estimated measurement separately in the tips array, clearly marked as "AI estimate — verify with the original recipe."
 Return ONLY raw JSON.`;
-    return await callGroq(preservePrompt + "\n\n" + SYSTEM_PROMPT, `Family Recipe Text:\n${rawText}`, RecipeSchema);
+    return await callGroq(preservePrompt + "\n\n" + SYSTEM_PROMPT, `Family Recipe Text:\n${rawText}`, RecipeSchema, 'preserve_family');
   } catch (err) {
     if (err?.name === 'ZodError') throw new Error('Structured family recipe did not match schema.');
     throw err;
@@ -198,7 +236,7 @@ exports.modernizeFamilyRecipe = async (structuredRecipe, options) => {
   try {
     const modernizePrompt = SYSTEM_PROMPT + `\n\nMODERNIZATION TASK:\nYou are provided with a structured family recipe and modernization options. Create a modern adaptation while retaining important characteristics of the original. Return ONLY raw JSON.`;
     const userContent = `Original Recipe:\n${JSON.stringify(structuredRecipe)}\n\nModernization Options: ${options}`;
-    return await callGroq(modernizePrompt, userContent, RecipeSchema);
+    return await callGroq(modernizePrompt, userContent, RecipeSchema, 'modernize_family');
   } catch (err) {
     if (err?.name === 'ZodError') throw new Error('Modernized recipe did not match schema.');
     throw err;
@@ -214,6 +252,7 @@ exports.getSubstitute = async (recipeTitle, missingIngredient) => {
   return await callGroq(
     `You are "SaaDish AI". Suggest a household pantry substitute for a missing ingredient. Respond ONLY with valid raw JSON: { "original": "String", "substitute": "String", "adjustmentNote": "String" }`,
     `Recipe: "${recipeTitle}". Missing ingredient: "${missingIngredient}". Suggest a household substitute.`,
-    SubstituteSchema
+    SubstituteSchema,
+    'substitute'
   );
 };

@@ -48,6 +48,31 @@ const recipeSchema = new mongoose.Schema({
   cuisine: { type: String, default: '' },
   taste: { type: String, default: '' },
   dietary_preferences: { type: [String], default: [] },
+  // Moderation and content status
+  status: {
+    type: String,
+    enum: ['active', 'flagged', 'hidden'],
+    default: 'active',
+    index: true,
+  },
+  isReported: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  reportReason: {
+    type: String,
+    default: '',
+  },
+  reportedAt: {
+    type: Date,
+    default: null,
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
   // MD5 hash of sorted ingredients for cache lookup
   ingredientHash: { type: String, index: true },
 }, { timestamps: true });

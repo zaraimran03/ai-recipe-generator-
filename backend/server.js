@@ -37,6 +37,25 @@ app.use('/api/family-recipes', require('./routes/familyRecipes'));
 app.use('/admin', require('./routes/admin'));
 app.use('/nutrition', require('./routes/nutrition'));
 
+// Public system settings route
+app.get('/api/settings', async (req, res) => {
+  try {
+    const SystemSetting = require('./models/SystemSetting');
+    const [cuisines, dietary, limits] = await Promise.all([
+      SystemSetting.findOne({ key: 'supportedCuisines' }),
+      SystemSetting.findOne({ key: 'supportedDietaryPreferences' }),
+      SystemSetting.findOne({ key: 'recipeGenerationLimits' }),
+    ]);
+    res.json({
+      supportedCuisines: cuisines?.value || ['Desi / South Asian', 'Italian', 'Mexican', 'Mediterranean', 'East Asian', 'Middle Eastern', 'American'],
+      supportedDietaryPreferences: dietary?.value || ['none', 'vegetarian', 'vegan', 'keto', 'paleo', 'gluten_free', 'dairy_free', 'halal', 'low_carb'],
+      recipeGenerationLimits: limits?.value || { guestLimit: 2, maxCookingTimeMinutes: 180, defaultServings: 2 },
+    });
+  } catch (e) {
+    res.status(500).json({ message: 'Error loading settings' });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

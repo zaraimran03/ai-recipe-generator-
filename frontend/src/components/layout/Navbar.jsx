@@ -115,10 +115,16 @@ export const Navbar = () => {
       {user ? (
         <div className="flex items-center gap-4 md:gap-8">
           <nav className="hidden md:flex items-center gap-6">
-          <Link to="/dashboard" className="text-primary font-bold border-b-2 border-primary pb-1 font-label-md text-label-md">Explore</Link>
-          <Link to="/saved" className="text-on-surface-variant font-medium hover:scale-105 transition-transform duration-200 hover:text-primary font-label-md text-label-md">Saved</Link>
-          <Link to="/nutrition" className="text-on-surface-variant font-medium hover:scale-105 transition-transform duration-200 hover:text-primary font-label-md text-label-md">Nutrition</Link>
-        </nav>
+            <Link to="/dashboard" className="text-primary font-bold border-b-2 border-primary pb-1 font-label-md text-label-md">Explore</Link>
+            <Link to="/saved" className="text-on-surface-variant font-medium hover:scale-105 transition-transform duration-200 hover:text-primary font-label-md text-label-md">Saved</Link>
+            <Link to="/nutrition" className="text-on-surface-variant font-medium hover:scale-105 transition-transform duration-200 hover:text-primary font-label-md text-label-md">Nutrition</Link>
+            {(user?.role === 'admin' || user?.is_superuser) && (
+              <Link to="/admin" className="text-primary/90 font-medium hover:scale-105 transition-transform duration-200 hover:text-primary font-label-md text-label-md flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20">
+                <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                <span>Admin</span>
+              </Link>
+            )}
+          </nav>
         <div className="flex items-center gap-3">
 
           {/* Notification Bell */}
